@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "docs" / "03-分镜数据.json"
 
 READ_CPS = 9.0       # 屏幕文字阅读速度（字/秒）
+SCREEN_CPS_WARN = 10.0  # 单镜屏幕文字总量提醒阈值（字/镜头秒）
 VO_CPS_WARN = 4.5    # 配音语速提醒阈值（音节/秒）
 VO_CPS_MAX = 5.0     # 配音语速上限
 SUB_MAX_CHARS = 16   # 字幕单行字数上限
@@ -138,6 +139,9 @@ def check(data):
         if abs(t - dur) > EPS:
             errors.append(f"{sid}: 各拍合计 {t} 秒，与镜头时长 {dur} 秒不符")
 
+        on_screen = sum(count_chars(x["content"]) for x in shot.get("text", []) if x["style"] != "code")
+        if on_screen / dur > SCREEN_CPS_WARN:
+            warnings.append(f"{sid}: 屏幕文字共 {on_screen} 字，平均每秒 {on_screen / dur:.1f} 字，偏密")
         for item in shot.get("text", []):
             a, b = item["t"]
             label = item["content"][:16].replace("\n", " ")

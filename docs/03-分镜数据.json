@@ -1,16 +1,16 @@
 {
-  "version": "3.1",
+  "version": "4.0",
   "title": "让AI看懂真实世界",
   "subtitle": "2027届，来做那个定义能源AI模型应用标准的人",
   "notes": [
-    "v3.1：按客户更新文案调整为“行业模型应用”定位；新增 S04 国家数据标注试点镜头；FDE 按客户文案保留。用词与语言要求见 copy_rules。",
+    "v4：时长调整为 150 秒（2 分 30 秒）、24 镜；新增 S05 行业场景、S17 成长通道、S22 招聘流程，恢复此前为压缩到 120 秒而缩短的镜头。用词与语言要求见 copy_rules。",
     "本文件是制作的唯一数据源：代码渲染、字幕导出、AI 提示词表和时间校验都从这里读取。修改后运行 python3 tools/storyboard.py check。",
     "镜头内的 t 均为相对本镜起点的秒数；绝对帧号 = round((镜头 start + t) × fps)。",
     "vo.t 为配音前的预估窗口，录音后用实测时间替换，镜头长度原则上不变。"
   ],
   "format": {
     "fps": 25,
-    "duration_s": 120,
+    "duration_s": 150,
     "master": { "w": 1920, "h": 1080, "aspect": "16:9" },
     "vertical": { "w": 1080, "h": 1920, "aspect": "9:16", "strategy": "代码场景按竖版版式原生重渲染；AI 画面取中央安全带裁切，主体镜头可另出 9:16 版本。" },
     "delivery": "H.264 High，yuv420p，CRF 16–18，AAC 48 kHz 320 kbps；母版另存 ProRes 422 HQ。",
@@ -137,7 +137,7 @@
     "glare_region_hint": [0.28, 0.3, 0.4, 0.48],
     "polygon_note": "polygon 为 IMG_HERO 归一化坐标的顶点数组；主图定稿后读图标定并写入，标定前渲染使用 target_region_hint 与 glare_region_hint（x0, y0, x1, y1）。",
     "pointcloud": "程序生成同构点云：管道、双法兰与 8 颗螺栓、压力表立管、阀门手轮；目标点在下沿。若公司提供可公开 .ply / .pcd / .las 文件，直接替换。",
-    "story": "S01 通用模型误判 → S02 对照现场修正边界 → S06 出现两种判断 → S07 写入场景应用规范 1.3 版 → S08 进入三维场景 → S10 场景校验找出同类漏检样本 023 → S11 对照实验 → S12 适配后模型通过现场验证 → S13 带教讲解 → S15 归档 → S20 被下一位同事复用。"
+    "story": "S01 通用模型误判 → S02 对照现场修正边界 → S07 出现两种判断 → S08 写入场景应用规范 1.3 版 → S09 进入三维场景 → S11 场景校验找出同类漏检样本 023 → S12 对照实验 → S13 适配后模型通过现场验证 → S14 带教讲解 → S16 归档 → S23 被下一位同事复用。"
   },
   "assets": {
     "IMG_HERO": {
@@ -171,7 +171,7 @@
       "fallback": "用 IMG_HERO 的不同裁切、镜像和曝光变化代替。",
       "replace_with_R": "公司可公开的同类样本图片（去除敏感信息）。"
     },
-    "V02_EYE": {
+    "V_EYE": {
       "kind": "video",
       "route": "A",
       "required": true,
@@ -182,7 +182,7 @@
       "acceptance": ["只眨眼一次，眼部形状稳定无变形。", "反光中没有可读文字。"],
       "replace_with_R": "实拍员工眼部特写（需本人同意）。"
     },
-    "V03_OFFICE_PULLBACK": {
+    "V_OFFICE_PULLBACK": {
       "kind": "video",
       "route": "A",
       "required": true,
@@ -193,7 +193,20 @@
       "acceptance": ["后拉匀速，无抖动与突变。", "所有屏幕不可读，人物不看镜头，墙面无文字或 Logo。"],
       "replace_with_R": "公司办公区实拍后拉镜头。"
     },
-    "V05_PAIR_DISCUSS": {
+    "V_PLANT_DUSK": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "缓慢匀速推近",
+      "prompt_en": "Slow, steady push-in toward a coal-chemical plant at blue hour: layered pipe racks, distillation towers and storage tanks, a few plumes of white steam rising slowly, warm sodium lights dotting the structures, deep blue sky. A row of pipe racks sits in the center of the frame; stable composition. No people.",
+      "prompt_zh": "缓慢匀速推近：蓝调时刻的煤化工装置区远景，管廊、塔器与储罐层层排列，几处白色蒸汽缓缓升起，钠灯在结构上点出暖黄色光点，天空为深蓝色。一排管廊位于画面中央，构图稳定。无人物。",
+      "negative_extra_en": "readable slogans, plant names, warning signs, text on chimneys",
+      "negative_extra_zh": "可读标语、厂名、警示牌、烟囱上的文字",
+      "acceptance": ["推近匀速，塔器与管廊不融化、不变形。", "画面中没有任何文字、厂名或标识。", "主体位于中央，9:16 中央裁切后成立。"],
+      "replace_with_R": "集团或公司可公开的装置区实拍（需确认拍摄与公开许可）。"
+    },
+    "V_PAIR_DISCUSS": {
       "kind": "video",
       "route": "A",
       "required": true,
@@ -204,7 +217,7 @@
       "acceptance": ["手指与纸张动作自然，无多余手指。", "屏幕与纸面内容不可读。"],
       "replace_with_R": "两位员工对照讨论的实拍。"
     },
-    "V07_3D_OVER_SHOULDER": {
+    "V_3D_OVER_SHOULDER": {
       "kind": "video",
       "route": "A",
       "required": false,
@@ -216,7 +229,7 @@
       "fallback": "省略，image_to_particles 从 0 秒开始。",
       "replace_with_R": "场景建模工程师操作点云软件的肩后实拍（屏幕内容需可公开）。"
     },
-    "V09_CODER_HANDS": {
+    "V_CODER_HANDS": {
       "kind": "video",
       "route": "A",
       "required": true,
@@ -227,7 +240,7 @@
       "acceptance": ["手指数量与关节正确，键帽无可读字符。"],
       "replace_with_R": "算法同事编写校验脚本的手部实拍。"
     },
-    "V10_WHITEBOARD": {
+    "V_WHITEBOARD": {
       "kind": "video",
       "route": "A",
       "required": true,
@@ -238,7 +251,7 @@
       "acceptance": ["白板上没有可读文字。", "画笔动作自然连贯。"],
       "replace_with_R": "研究讨论实拍（白板内容可在后期替换为代码画面）。"
     },
-    "V12_MENTOR": {
+    "V_MENTOR": {
       "kind": "video",
       "route": "A",
       "required": true,
@@ -249,7 +262,7 @@
       "acceptance": ["两人关系自然，非摆拍式微笑。", "纸面和屏幕内容不可读。"],
       "replace_with_R": "生产骨干带教新同事的实拍（需本人同意）。"
     },
-    "V13_TEAM_TABLE": {
+    "V_TEAM_TABLE": {
       "kind": "video",
       "route": "A",
       "required": true,
@@ -260,7 +273,18 @@
       "acceptance": ["三人身份在片段内稳定。", "白板与屏幕不可读。"],
       "replace_with_R": "技术负责人与硕博同事讨论的实拍。"
     },
-    "V19_PROFILE": {
+    "V_STAIRS": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "锁定机位，轻微上摇",
+      "prompt_en": "Medium shot from behind: a young employee carrying a laptop walks up a short flight of stairs in the bright atrium of a modern office building, with light, natural steps. Afternoon sunlight slants in from high windows; navy and teal accents on the walls. Static camera with a slight upward tilt following the person.",
+      "prompt_zh": "背影中景：一位年轻员工抱着笔记本电脑，走上明亮的现代办公楼中庭里的一段楼梯，脚步轻快自然。午后阳光从高窗斜射进来，墙面有深蓝与青绿色点缀。机位固定，轻微上摇跟随人物。",
+      "acceptance": ["步伐自然，腿脚与台阶无穿插、无变形。", "人物不看镜头，墙面与屏幕没有文字或 Logo。"],
+      "replace_with_R": "员工在办公楼内行走的实拍（需本人同意）。"
+    },
+    "V_PROFILE": {
       "kind": "video",
       "route": "A",
       "required": true,
@@ -275,11 +299,13 @@
   "music": [
     { "t": 0.0, "cue": "无音乐，只有装置区低频环境声。" },
     { "t": 5.0, "cue": "简洁电子节奏进入，建议每分钟 100 拍（每拍 15 帧，便于卡点）。" },
-    { "t": 15.0, "cue": "试点镜头节奏略提，配合三条信息落定。" },
-    { "t": 68.0, "cue": "带教段音乐降低约 4 dB，减少打击乐，让人物关系更近。" },
-    { "t": 84.0, "cue": "岗位段节奏稳定、少变化，保证阅读。" },
-    { "t": 116.5, "cue": "音乐自然收束。" },
-    { "t": 117.0, "cue": "最后 3 秒只保留轻微室内底噪，留出阅读与扫码时间。" }
+    { "t": 15.0, "cue": "试点与行业场景段节奏略提，配合信息落定。" },
+    { "t": 79.0, "cue": "带教段音乐降低约 4 dB，减少打击乐，让人物关系更近。" },
+    { "t": 97.0, "cue": "成长通道段旋律逐步抬升。" },
+    { "t": 104.0, "cue": "岗位与投递段节奏稳定、少变化，保证阅读。" },
+    { "t": 138.0, "cue": "回扣段情绪抬升，铺向片尾。" },
+    { "t": 146.5, "cue": "音乐自然收束。" },
+    { "t": 147.0, "cue": "最后 3 秒只保留轻微室内底噪，留出阅读与扫码时间。" }
   ],
   "shots": [
     {
@@ -318,7 +344,7 @@
       "beats": [
         { "t": [0, 0.48], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "承接 S01：画面缩小进入场景工作台的画布，界面框架从四周淡入。" },
         { "t": [0.48, 3.0], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "画布叠两层：琥珀色为通用模型输出（框在反光上、漏掉遮挡处），青色为现场复核；光标拖动第 3、第 5 个顶点修正边界；右侧面板显示类别“渗漏锈蚀”，属性“遮挡”“反光”未勾选。" },
-        { "t": [3.0, 5.0], "src": "A", "asset": "V02_EYE", "do": "眼部特写，屏幕光映在虹膜上。" }
+        { "t": [3.0, 5.0], "src": "A", "asset": "V_EYE", "do": "眼部特写，屏幕光映在虹膜上。" }
       ],
       "text": [
         { "t": [0.6, 2.9], "style": "label", "zone": "top-left", "content": "模型输出｜现场复核" }
@@ -340,7 +366,7 @@
       "end": 15,
       "purpose": "前 15 秒内交代企业归属。",
       "beats": [
-        { "t": [0, 2.8], "src": "A", "asset": "V03_OFFICE_PULLBACK", "do": "从显示器后方后拉，露出正在工作的团队。" },
+        { "t": [0, 2.8], "src": "A", "asset": "V_OFFICE_PULLBACK", "do": "从显示器后方后拉，露出正在工作的团队。" },
         { "t": [2.8, 5.0], "src": "G", "scene": "brand_card", "do": "定格上一帧，18px 高斯模糊并叠 72% 深蓝；公司名与短青线依次出现。有品牌墙实拍时改用实拍并保留同样文字层。" }
       ],
       "text": [
@@ -359,36 +385,73 @@
       "id": "S04",
       "section": "提问、公司与试点",
       "start": 15,
-      "end": 22,
+      "end": 24,
       "purpose": "交代“为什么是这里”：平顶山入选国家数据标注先行先试工作城市，智数科技是试点任务的核心运营载体。",
       "beats": [
-        { "t": [0, 2.6], "src": "G", "scene": "pilot_cities", "do": "深蓝底上 32 个抽象光点排成点阵（代表全国新增 32 个先行先试城市，不使用地图轮廓）；其中一点亮起青色并放大，标为平顶山市。" },
-        { "t": [2.6, 7.0], "src": "G", "scene": "pilot_facts", "do": "点阵收拢为九段环形图（九大试点领域），其中“智慧能源”一段以青色高亮；右侧按编号依次落下三条信息，版式沿用校招资料第 3 页的 1 / 2 / 3 结构。" }
+        { "t": [0, 3.0], "src": "G", "scene": "pilot_cities", "do": "深蓝底上 32 个抽象光点排成点阵（代表全国新增 32 个先行先试城市，不使用地图轮廓）；其中一点亮起青色并放大，标为平顶山市。" },
+        { "t": [3.0, 9.0], "src": "G", "scene": "pilot_facts", "do": "点阵收拢为九段环形图（九大试点领域），其中“智慧能源”一段以青色高亮；右侧按编号每隔 1.2 秒落下一条信息，版式沿用校招资料第 3 页的 1 / 2 / 3 结构。" }
       ],
       "text": [
-        { "t": [0.2, 7.0], "style": "label", "zone": "top-left", "content": "国家数据局 · 第二批数据标注先行先试（领域创新）工作城市" },
-        { "t": [0.6, 7.0], "style": "h2", "zone": "title", "content": "平顶山市入选" },
-        { "t": [0.9, 2.6], "style": "tag", "zone": "anchor:dot", "content": "全国新增 32 城之一" },
-        { "t": [2.8, 7.0], "style": "tag", "zone": "anchor:ring", "content": "智慧能源领域 · 唯一深耕煤炭化工赛道" },
-        { "t": [2.8, 7.0], "style": "body", "zone": "fact_1", "content": "全省唯一入选 · 全国能源化工领域唯一试点城市" },
-        { "t": [3.6, 7.0], "style": "body", "zone": "fact_2", "content": "集团：试点申报中坚力量" },
-        { "t": [4.4, 7.0], "style": "body", "zone": "fact_3", "content": "智数科技：试点任务核心运营载体" }
+        { "t": [0.2, 9.0], "style": "label", "zone": "top-left", "content": "国家数据局 · 第二批数据标注先行先试（领域创新）工作城市" },
+        { "t": [0.6, 9.0], "style": "h2", "zone": "title", "content": "平顶山市入选" },
+        { "t": [0.9, 3.0], "style": "tag", "zone": "anchor:dot", "content": "全国新增 32 城之一" },
+        { "t": [3.2, 9.0], "style": "tag", "zone": "anchor:ring", "content": "唯一深耕煤炭化工赛道" },
+        { "t": [3.4, 9.0], "style": "body", "zone": "fact_1", "content": "全省唯一 · 全国能源化工领域唯一" },
+        { "t": [4.6, 9.0], "style": "body", "zone": "fact_2", "content": "集团：试点申报中坚力量" },
+        { "t": [5.8, 9.0], "style": "body", "zone": "fact_3", "content": "智数科技：试点任务核心运营载体" }
       ],
-      "vo": { "text": "平顶山入选“国字号”数据标注试点，智数科技是核心运营载体。", "tts": "平顶山入选国字号数据标注试点，智数科技是核心运营载体。", "t": [0.3, 6.4] },
+      "vo": { "text": "平顶山入选“国字号”数据标注试点，能源化工领域全国唯一。智数科技，是核心运营载体。", "tts": "平顶山入选国字号数据标注试点，能源化工领域全国唯一。智数科技，是核心运营载体。", "t": [0.3, 8.4] },
       "subtitle": true,
       "audio": [
         { "t": 1.0, "cue": "光点亮起的清脆提示音" },
-        { "t": 2.8, "cue": "信息落定轻响 ×3（2.8 / 3.6 / 4.4 秒）" }
+        { "t": 3.4, "cue": "信息落定轻响 ×3（3.4 / 4.6 / 5.8 秒）" }
       ],
-      "transition_out": "环形图中的青色一段延伸成线，带入 S05 三块界面之间的连接线。",
+      "transition_out": "硬切至 S05 装置区远景。",
       "vertical": "标题与点阵在上，三条信息纵向排列在下。",
       "source": "按客户提供的试点介绍（references/试点介绍-客户提供.md）表述；入选主体为平顶山市。"
     },
     {
       "id": "S05",
+      "section": "提问、公司与试点",
+      "start": 24,
+      "end": 31,
+      "purpose": "说明为什么需要 FDE：能源工业场景没有现成的 AI 模型模板。",
+      "beats": [
+        { "t": [0, 1.6], "src": "A", "asset": "V_PLANT_DUSK", "do": "蓝调时刻的煤化工装置区远景，缓慢推近。" },
+        { "t": [1.6, 7.0], "src": "G", "scene": "scenario_tiles", "do": "画面定格并压暗虚化；五个场景卡片每隔 0.4 秒依次出现，各带一个代码绘制的线条图标（安全帽、考核清单、齿轮与波形、扫描框、疏散箭头）；3.6 秒起卡片外出现琥珀色虚线，表示“没有现成模板”；4.8 秒起青色线从左到右穿过五张卡片，卡片转为青色。" }
+      ],
+      "text": [
+        { "t": [1.7, 7.0], "style": "tag", "zone": "tile_1", "content": "煤矿安全培训" },
+        { "t": [2.1, 7.0], "style": "tag", "zone": "tile_2", "content": "特殊工种实操考核" },
+        { "t": [2.5, 7.0], "style": "tag", "zone": "tile_3", "content": "设备故障预警" },
+        { "t": [2.9, 7.0], "style": "tag", "zone": "tile_4", "content": "隐患智能识别" },
+        { "t": [3.3, 7.0], "style": "tag", "zone": "tile_5", "content": "灾害应急推演" },
+        { "t": [3.6, 7.0], "style": "label", "zone": "top-left", "content": "这些工业场景，没有现成AI模型模板" },
+        { "t": [4.8, 7.0], "style": "h2", "zone": "center", "content": "需要完成FDE行业适配，实现模型真正可用" }
+      ],
+      "vo": {
+        "text": "安全培训、故障预警、隐患识别，这些工业场景，没有现成的模型模板。",
+        "t": [0.3, 6.4],
+        "phrases": [
+          { "text": "安全培训、故障预警、隐患识别，", "t": [0.3, 3.0] },
+          { "text": "这些工业场景，没有现成的模型模板。", "t": [3.2, 6.4] }
+        ]
+      },
+      "subtitle": true,
+      "audio": [
+        { "t": 0.0, "cue": "装置区远处的低频环境声" },
+        { "t": 1.7, "cue": "卡片出现的轻响 ×5" },
+        { "t": 4.8, "cue": "青色线穿过的上扬音" }
+      ],
+      "transition_out": "青色线向右延伸出画，带入 S06 三块界面之间的连接线。",
+      "vertical": "五张卡片纵向排列，两行标题置于上方。",
+      "source": "客户文案“WHY HERE”段：这些工业场景没有现成AI模型模板，需要完成FDE行业适配，实现模型真正可用。"
+    },
+    {
+      "id": "S06",
       "section": "工作内容",
-      "start": 22,
-      "end": 28,
+      "start": 31,
+      "end": 37,
       "purpose": "三类行业数据各给一个看得懂的动作：为模型备好数据。",
       "beats": [
         { "t": [0, 2.0], "src": "G", "scene": "modality_triptych", "asset": "IMG_HERO", "do": "图像：主图压力表局部，矩形框描出并标“压力表”，青色确认勾出现。" },
@@ -419,14 +482,14 @@
       "vertical": "三块画面纵向排列。"
     },
     {
-      "id": "S06",
+      "id": "S07",
       "section": "工作内容",
-      "start": 28,
-      "end": 34,
+      "start": 37,
+      "end": 43,
       "purpose": "把“认真”拍成遇到模糊边界时的具体做法。",
       "beats": [
         { "t": [0, 2.2], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "放大到目标：蒸汽区与表盘反光区各出现琥珀色虚线框和问号；光标点击“加入边界案例”，案例卡滑入右侧列表。" },
-        { "t": [2.2, 4.2], "src": "A", "asset": "V05_PAIR_DISCUSS", "do": "两位同事对照讨论并翻阅规范。" },
+        { "t": [2.2, 4.2], "src": "A", "asset": "V_PAIR_DISCUSS", "do": "两位同事对照讨论并翻阅规范。" },
         { "t": [4.2, 6.0], "src": "G", "scene": "boundary_compare", "asset": "IMG_HERO", "do": "目标局部上叠加两种判断：判断一（青色，含蒸汽遮挡区）与判断二（琥珀色，不含）；差异区域斜线填充；右侧滑入场景规范片段。" }
       ],
       "text": [
@@ -441,14 +504,14 @@
         { "t": 1.4, "cue": "按钮点击，卡片滑入" },
         { "t": 4.2, "cue": "两层叠加的轻微和声" }
       ],
-      "transition_out": "形状匹配：差异区多边形移入 S07 规范页的案例缩略图。",
+      "transition_out": "形状匹配：差异区多边形移入 S08 规范页的案例缩略图。",
       "vertical": "对比图在上，规范片段在下。"
     },
     {
-      "id": "S07",
+      "id": "S08",
       "section": "工作内容",
-      "start": 34,
-      "end": 40,
+      "start": 43,
+      "end": 49,
       "purpose": "一次判断变成可复用、可迁移的规范，并被批量执行。",
       "beats": [
         { "t": [0, 2.8], "src": "G", "scene": "spec_doc", "asset": "IMG_HERO", "do": "浅色规范页“场景应用规范 1.3 版”，新增条款 3.4 逐行显现；案例 017 缩略图落入页面，多边形与上一镜形状匹配。" },
@@ -470,13 +533,13 @@
       "vertical": "规范页全屏；样本网格改为 3 列 × 4 行。"
     },
     {
-      "id": "S08",
+      "id": "S09",
       "section": "工作内容",
-      "start": 40,
-      "end": 46,
+      "start": 49,
+      "end": 55,
       "purpose": "从二维进入三维，展示场景建模的工作对象。",
       "beats": [
-        { "t": [0, 1.6], "src": "A", "asset": "V07_3D_OVER_SHOULDER", "optional": true, "do": "肩后看工程师操作点云（可选）。" },
+        { "t": [0, 1.6], "src": "A", "asset": "V_3D_OVER_SHOULDER", "optional": true, "do": "肩后看工程师操作点云（可选）。" },
         { "t": [1.6, 2.8], "src": "G", "scene": "image_to_particles", "asset": "IMG_HERO", "do": "主图按像素采样为约 6 万个粒子，粒子获得深度并飞向程序点云的对应位置。" },
         { "t": [2.8, 6.0], "src": "G", "scene": "pointcloud", "do": "围绕法兰环绕 20°；目标点在 3.0–3.6 秒变为琥珀色；3.6–4.2 秒描出青色三维框；左下角坐标轴；主体位于画面中右，避开标题区。" }
       ],
@@ -490,39 +553,39 @@
         { "t": 1.6, "cue": "粒子散开的细碎声" },
         { "t": 3.6, "cue": "三维框闭合轻响" }
       ],
-      "transition_out": "连续镜头：S09 从同一点云视角开始后拉。",
+      "transition_out": "连续镜头：S10 从同一点云视角开始后拉。",
       "vertical": "点云居中，标题置顶，环绕角度不变。"
     },
     {
-      "id": "S09",
+      "id": "S10",
       "section": "工作内容",
-      "start": 46,
-      "end": 51,
+      "start": 55,
+      "end": 61,
       "purpose": "三维场景服务模型输入：目标在场景中有确定的位置。",
       "beats": [
-        { "t": [0, 2.4], "src": "G", "scene": "pointcloud_scene", "do": "从法兰后拉：管廊支架、更多管道、储罐与楼梯按距离依次生长出来；目标三维框始终高亮。" },
-        { "t": [2.4, 5.0], "src": "G", "scene": "multi_view", "do": "画面分为主视、俯视、三维三个视图，同一目标在三处同时高亮，以青色引线相连。" }
+        { "t": [0, 3.0], "src": "G", "scene": "pointcloud_scene", "do": "从法兰后拉：管廊支架、更多管道、储罐与楼梯按距离依次生长出来；目标三维框始终高亮。" },
+        { "t": [3.0, 6.0], "src": "G", "scene": "multi_view", "do": "画面分为主视、俯视、三维三个视图，同一目标在三处同时高亮，以青色引线相连。" }
       ],
       "text": [
-        { "t": [0.3, 2.3], "style": "label", "zone": "top-left", "content": "三维场景 → 模型输入（示意）" },
-        { "t": [2.6, 5.0], "style": "tag", "zone": "center", "content": "同一目标 · 三个视图" }
+        { "t": [0.3, 2.9], "style": "label", "zone": "top-left", "content": "三维场景 → 模型输入（示意）" },
+        { "t": [3.3, 6.0], "style": "tag", "zone": "center", "content": "同一目标 · 三个视图" }
       ],
-      "vo": { "text": "为模型搭建三维场景，让目标拥有准确的位置。", "t": [0.3, 4.7] },
+      "vo": { "text": "为模型搭建三维场景，让每个目标拥有准确的位置。", "t": [0.3, 5.4] },
       "subtitle": true,
       "audio": [
-        { "t": 2.4, "cue": "分屏切开的轻响" }
+        { "t": 3.0, "cue": "分屏切开的轻响" }
       ],
       "transition_out": "硬切。",
       "vertical": "三个视图纵向排列。"
     },
     {
-      "id": "S10",
+      "id": "S11",
       "section": "工作内容",
-      "start": 51,
-      "end": 57,
+      "start": 61,
+      "end": 67,
       "purpose": "说明硕士岗位：用代码与实验找出模型在现场出错的原因。",
       "beats": [
-        { "t": [0, 1.2], "src": "A", "asset": "V09_CODER_HANDS", "do": "敲键盘，点击鼠标。" },
+        { "t": [0, 1.2], "src": "A", "asset": "V_CODER_HANDS", "do": "敲键盘，点击鼠标。" },
         { "t": [1.2, 4.4], "src": "G", "scene": "validate_terminal", "do": "深色编辑器显示 3 行示意代码并运行场景校验；结果表中多数场景以灰色显示通过，只有“蒸汽遮挡”一行以琥珀色突出：样本 023 漏检，待补充同类数据。" },
         { "t": [4.4, 6.0], "src": "G", "scene": "scene_workbench", "asset": "IMG_SAMPLES", "do": "点击该行，画面推入场景工作台打开样本 023；按 1.3 版补勾“遮挡”属性，并加入下一版行业数据集。" }
       ],
@@ -543,34 +606,34 @@
       "vertical": "编辑器字号放大，代码只保留注释与 1 行调用。"
     },
     {
-      "id": "S11",
+      "id": "S12",
       "section": "工作内容",
-      "start": 57,
-      "end": 62,
+      "start": 67,
+      "end": 73,
       "purpose": "说明研究工作：问题、假设、实验、复核。",
       "beats": [
-        { "t": [0, 1.6], "src": "A", "asset": "V10_WHITEBOARD", "do": "两人在白板前讨论。" },
-        { "t": [1.6, 3.4], "src": "G", "scene": "whiteboard_flow", "do": "白板纹理上，深蓝马克笔逐笔画出四个方框与箭头，最后画回环箭头；“复核”加青色强调。" },
-        { "t": [3.4, 5.0], "src": "G", "scene": "experiment_log", "do": "实验记录卡片滑入，只写对照对象，不出现性能数字或曲线。" }
+        { "t": [0, 2.0], "src": "A", "asset": "V_WHITEBOARD", "do": "两人在白板前讨论。" },
+        { "t": [2.0, 4.2], "src": "G", "scene": "whiteboard_flow", "do": "白板纹理上，深蓝马克笔逐笔画出四个方框与箭头，最后画回环箭头；“复核”加青色强调。" },
+        { "t": [4.2, 6.0], "src": "G", "scene": "experiment_log", "do": "实验记录卡片滑入，只写对照对象，不出现性能数字或曲线。" }
       ],
       "text": [
-        { "t": [0.1, 1.6], "style": "label", "zone": "top-left", "content": "研究问题｜实验验证" },
-        { "t": [1.7, 3.4], "style": "hand", "zone": "board", "content": "问题 → 假设 → 实验 → 复核" },
-        { "t": [3.5, 5.0], "style": "body", "zone": "card", "content": "对照实验：通用模型 / 适配后模型" }
+        { "t": [0.3, 1.9], "style": "label", "zone": "top-left", "content": "研究问题｜实验验证" },
+        { "t": [2.1, 4.2], "style": "hand", "zone": "board", "content": "问题 → 假设 → 实验 → 复核" },
+        { "t": [4.3, 6.0], "style": "body", "zone": "card", "content": "对照实验：通用模型 / 适配后模型" }
       ],
-      "vo": { "text": "从分析问题，到设计实验，让模型适配有据可依。", "t": [0.3, 4.7] },
+      "vo": { "text": "从分析问题，到设计实验，让模型适配有据可依。", "t": [0.3, 5.4] },
       "subtitle": true,
       "audio": [
-        { "t": 1.6, "cue": "马克笔书写声" }
+        { "t": 2.0, "cue": "马克笔书写声" }
       ],
-      "transition_out": "青色线擦除：回环箭头延伸成横线，带入 S12 的三联画面。",
+      "transition_out": "青色线擦除：回环箭头延伸成横线，带入 S13 的三联画面。",
       "vertical": "白板流程改为竖向四步。"
     },
     {
-      "id": "S12",
+      "id": "S13",
       "section": "工作内容",
-      "start": 62,
-      "end": 68,
+      "start": 73,
+      "end": 79,
       "purpose": "通用模型、适配后模型与现场复核放在一起，回到现场形成闭环：完成 FDE 行业适配，模型真正可用。",
       "beats": [
         { "t": [0, 3.6], "src": "G", "scene": "layer_compare", "asset": "IMG_HERO", "do": "左中右三块：通用模型（框在反光上、漏掉遮挡处）、适配后模型（覆盖真实锈蚀边界）、现场复核（确认勾）；青色线从左向右穿过。" },
@@ -586,17 +649,17 @@
       "audio": [
         { "t": 3.6, "cue": "开阔的和声铺底，标志段落结束" }
       ],
-      "transition_out": "淡入暖色，接 S13。",
+      "transition_out": "淡入暖色，接 S14。",
       "vertical": "三块画面纵向排列，汇合后以目标为中心裁切。"
     },
     {
-      "id": "S13",
-      "section": "带教与积累",
-      "start": 68,
-      "end": 74,
+      "id": "S14",
+      "section": "带教与成长",
+      "start": 79,
+      "end": 85,
       "purpose": "本科生如何开始：项目组里有人带。",
       "beats": [
-        { "t": [0, 3.6], "src": "A", "asset": "V12_MENTOR", "do": "资深同事坐在新同事旁讲解。" },
+        { "t": [0, 3.6], "src": "A", "asset": "V_MENTOR", "do": "资深同事坐在新同事旁讲解。" },
         { "t": [3.6, 6.0], "src": "G", "scene": "paper_spec_insert", "do": "打印的场景规范页，高亮扫过条款 3.4；一张便签贴上，写着新同事的问题。" }
       ],
       "text": [
@@ -612,85 +675,114 @@
       "vertical": "人物镜头取中央裁切，规范页全屏。"
     },
     {
-      "id": "S14",
-      "section": "带教与积累",
-      "start": 74,
-      "end": 79,
+      "id": "S15",
+      "section": "带教与成长",
+      "start": 85,
+      "end": 91,
       "purpose": "硕博如何开始：技术负责人带项目。",
       "beats": [
-        { "t": [0, 2.4], "src": "A", "asset": "V13_TEAM_TABLE", "do": "三人围桌讨论，一人起身指向白板。" },
-        { "t": [2.4, 5.0], "src": "G", "scene": "task_board", "do": "问题卡“薄蒸汽遮挡下为何漏检”拆为三张任务卡，依次移入待办、进行中、验证三列，以青色线相连。" }
+        { "t": [0, 3.0], "src": "A", "asset": "V_TEAM_TABLE", "do": "三人围桌讨论，一人起身指向白板。" },
+        { "t": [3.0, 6.0], "src": "G", "scene": "task_board", "do": "问题卡“薄蒸汽遮挡下为何漏检”拆为三张任务卡，依次移入待办、进行中、验证三列，以青色线相连。" }
       ],
       "text": [
-        { "t": [0.4, 4.8], "style": "label", "zone": "top-left", "content": "硕博｜技术负责人带项目" },
-        { "t": [2.6, 5.0], "style": "body", "zone": "board", "content": "构造对照场景｜设计适配实验｜回到现场验证" }
+        { "t": [0.6, 5.8], "style": "label", "zone": "top-left", "content": "硕博｜技术负责人带项目" },
+        { "t": [3.2, 6.0], "style": "body", "zone": "board", "content": "构造对照场景｜设计适配实验｜回到现场验证" }
       ],
-      "vo": { "text": "做技术攻关，由技术负责人带项目，接受现场检验。", "t": [0.2, 4.8] },
+      "vo": { "text": "做技术攻关，有技术负责人带项目，让研究接受现场检验。", "t": [0.3, 5.6] },
       "subtitle": true,
       "audio": [
-        { "t": 2.8, "cue": "卡片移动的轻响 ×3" }
+        { "t": 3.4, "cue": "卡片移动的轻响 ×3" }
       ],
       "transition_out": "硬切。",
       "vertical": "任务板三列改为三行。"
     },
     {
-      "id": "S15",
-      "section": "带教与积累",
-      "start": 79,
-      "end": 84,
+      "id": "S16",
+      "section": "带教与成长",
+      "start": 91,
+      "end": 97,
       "purpose": "用交付物表达完整 FDE 技术栈的积累，以及“看落地效果、看交付节点”的评价方式。",
       "beats": [
-        { "t": [0, 3.4], "src": "G", "scene": "deliverables", "asset": "IMG_SAMPLES", "do": "顶部标题“完整FDE技术栈积累”；四张成果卡每隔 0.5 秒叠加出现并保持：行业数据集 1.3 版（样本缩略图）、三维场景文件（小点云）、场景校验脚本（代码片段）、场景应用规范 1.3 版 · 案例 017（文档页）。" },
-        { "t": [3.4, 5.0], "src": "G", "scene": "deliverables", "do": "四张卡飞入“项目归档”目录树，三条评价标签依次出现。" }
+        { "t": [0, 4.2], "src": "G", "scene": "deliverables", "asset": "IMG_SAMPLES", "do": "顶部标题“完整FDE技术栈积累”；四张成果卡每隔 0.8 秒叠加出现并保持：行业数据集 1.3 版（样本缩略图）、三维场景文件（小点云）、场景校验脚本（代码片段）、场景应用规范 1.3 版 · 案例 017（文档页）。" },
+        { "t": [4.2, 6.0], "src": "G", "scene": "deliverables", "do": "四张卡飞入“项目归档”目录树，三条评价标签依次出现。" }
       ],
       "text": [
-        { "t": [0.1, 3.4], "style": "label", "zone": "top-left", "content": "完整FDE技术栈积累" },
-        { "t": [0.2, 3.4], "style": "tag", "zone": "card_1", "content": "行业数据集 1.3 版" },
-        { "t": [0.7, 3.4], "style": "tag", "zone": "card_2", "content": "三维场景文件" },
-        { "t": [1.2, 3.4], "style": "tag", "zone": "card_3", "content": "场景校验脚本" },
-        { "t": [1.7, 3.4], "style": "tag", "zone": "card_4", "content": "场景应用规范 1.3 版 · 案例 017" },
-        { "t": [3.5, 5.0], "style": "label", "zone": "center", "content": "落地效果｜交付节点｜可复用标准" }
+        { "t": [0.1, 4.2], "style": "label", "zone": "top-left", "content": "完整FDE技术栈积累" },
+        { "t": [0.2, 4.2], "style": "tag", "zone": "card_1", "content": "行业数据集 1.3 版" },
+        { "t": [1.0, 4.2], "style": "tag", "zone": "card_2", "content": "三维场景文件" },
+        { "t": [1.8, 4.2], "style": "tag", "zone": "card_3", "content": "场景校验脚本" },
+        { "t": [2.6, 4.2], "style": "tag", "zone": "card_4", "content": "场景应用规范 1.3 版 · 案例 017" },
+        { "t": [4.3, 6.0], "style": "label", "zone": "center", "content": "落地效果｜交付节点｜可复用标准" }
       ],
-      "vo": { "text": "看落地效果，看交付节点，沉淀可复用的标准。", "t": [0.3, 4.7] },
+      "vo": { "text": "看落地效果，看交付节点，让经验沉淀为可复用的标准。", "t": [0.3, 5.4] },
       "subtitle": true,
       "audio": [
-        { "t": 3.4, "cue": "归档的收拢声" }
+        { "t": 4.2, "cue": "归档的收拢声" }
       ],
-      "transition_out": "四张卡变为 S16 的四宫格。",
+      "transition_out": "成果卡收拢为一条青色线，转入 S17 成长通道。",
       "vertical": "成果卡纵向依次出现。"
     },
     {
-      "id": "S16",
-      "section": "招聘岗位",
-      "start": 84,
-      "end": 89,
-      "purpose": "给出招聘总数与学历结构。",
+      "id": "S17",
+      "section": "带教与成长",
+      "start": 97,
+      "end": 104,
+      "purpose": "回答“做下去会怎样”：清晰的成长通道。",
       "beats": [
-        { "t": [0, 1.92], "src": "G", "scene": "role_grid", "do": "2×2 宫格复用前面画面：S05 多模态数据、S08 点云、S10 终端、S11 白板，各配岗位方向名。" },
-        { "t": [1.92, 5.0], "src": "G", "scene": "recruit_total", "do": "浅色卡片覆盖宫格；“58”在 2.0–3.2 秒由 0 计数到 58；3.3–3.8 秒出现学历拆分，其后静止。" }
+        { "t": [0, 2.0], "src": "A", "asset": "V_STAIRS", "do": "年轻员工抱着笔记本电脑走上办公楼中庭的楼梯，背影。" },
+        { "t": [2.0, 7.0], "src": "G", "scene": "growth_path", "do": "深蓝底上两条通道由青色线描出：本科一条从“项目组上手”分出三个方向节点；硕博一条直接连到“技术开发部核心模型适配方向”。节点依次点亮后静止。" }
       ],
       "text": [
-        { "t": [0.1, 1.9], "style": "tag", "zone": "grid", "content": "模型配套｜场景建模｜算法研发｜AI研究" },
-        { "t": [2.0, 5.0], "style": "label", "zone": "card", "content": "2027届校园招聘 · 计划招聘" },
-        { "t": [2.0, 5.0], "style": "stat", "zone": "card", "content": "58人" },
-        { "t": [3.3, 5.0], "style": "body", "zone": "card", "content": "本科 50｜硕士 5｜博士 3" }
+        { "t": [2.1, 7.0], "style": "label", "zone": "top-left", "content": "清晰的成长通道" },
+        { "t": [2.3, 7.0], "style": "body", "zone": "lane_1", "content": "本科产出优异者" },
+        { "t": [2.8, 7.0], "style": "tag", "zone": "node_1", "content": "高端场景工程" },
+        { "t": [3.2, 7.0], "style": "tag", "zone": "node_2", "content": "校验管理" },
+        { "t": [3.6, 7.0], "style": "tag", "zone": "node_3", "content": "行业模型应用标准设计" },
+        { "t": [4.4, 7.0], "style": "body", "zone": "lane_2", "content": "硕博：直接进入技术开发部核心模型适配方向" },
+        { "t": [4.8, 7.0], "style": "notice", "zone": "bottom-left", "content": "具体以公司正式制度为准" }
       ],
-      "vo": { "text": "2027届，智数科技，寻找五十八位“模型先锋”。", "tts": "二零二七届，智数科技，寻找五十八位模型先锋。", "t": [0.3, 4.7] },
+      "vo": { "text": "产出优异者，可走向场景工程、校验管理与应用标准设计。", "t": [0.3, 5.8] },
       "subtitle": true,
       "audio": [
-        { "t": 2.0, "cue": "计数时的细密滴答，3.2 秒落定" }
+        { "t": 2.0, "cue": "通道描出的细微电流声" },
+        { "t": 2.8, "cue": "节点点亮 ×3" }
       ],
-      "transition_out": "浅色卡片左移收窄，成为 S17 的标题栏。",
+      "transition_out": "节点收拢为一点，转入 S18 的四宫格。",
+      "vertical": "两条通道上下排列，方向节点纵向展开。",
+      "source": "客户文案“WHAT YOU GET 05 清晰的成长通道”。"
+    },
+    {
+      "id": "S18",
+      "section": "招聘岗位与投递",
+      "start": 104,
+      "end": 110,
+      "purpose": "给出招聘总数与学历结构。",
+      "beats": [
+        { "t": [0, 2.0], "src": "G", "scene": "role_grid", "do": "2×2 宫格复用前面画面：S06 多模态数据、S09 点云、S11 终端、S12 白板，各配岗位方向名。" },
+        { "t": [2.0, 6.0], "src": "G", "scene": "recruit_total", "do": "浅色卡片覆盖宫格；“58”在 2.2–3.4 秒由 0 计数到 58；3.5–4.0 秒出现学历拆分，其后静止。" }
+      ],
+      "text": [
+        { "t": [0.1, 2.0], "style": "tag", "zone": "grid", "content": "模型配套｜场景建模｜算法研发｜AI研究" },
+        { "t": [2.1, 6.0], "style": "label", "zone": "card", "content": "2027届校园招聘 · 计划招聘" },
+        { "t": [2.2, 6.0], "style": "stat", "zone": "card", "content": "58人" },
+        { "t": [3.5, 6.0], "style": "body", "zone": "card", "content": "本科 50｜硕士 5｜博士 3" }
+      ],
+      "vo": { "text": "2027届，智数科技，寻找五十八位“模型先锋”。", "tts": "二零二七届，智数科技，寻找五十八位模型先锋。", "t": [0.3, 5.0] },
+      "subtitle": true,
+      "audio": [
+        { "t": 2.2, "cue": "计数时的细密滴答，3.4 秒落定" }
+      ],
+      "transition_out": "浅色卡片左移收窄，成为 S19 的标题栏。",
       "vertical": "数字居中放大，拆分改为三行。"
     },
     {
-      "id": "S17",
-      "section": "招聘岗位",
-      "start": 89,
-      "end": 96,
+      "id": "S19",
+      "section": "招聘岗位与投递",
+      "start": 110,
+      "end": 117,
       "purpose": "本科两个岗位，人数与方向一眼可读。",
       "beats": [
-        { "t": [0, 0.8], "src": "G", "scene": "job_card_pair", "do": "顶部“本科 · 50 人”，下方两张岗位卡入场；每张卡上方为 50% 慢放、压暗的工作画面（S05、S08）。" },
+        { "t": [0, 0.8], "src": "G", "scene": "job_card_pair", "do": "顶部“本科 · 50 人”，下方两张岗位卡入场；每张卡上方为 50% 慢放、压暗的工作画面（S06、S09）。" },
         { "t": [0.8, 7.0], "src": "G", "scene": "job_card_pair", "do": "文字静止 6.2 秒，仅背景画面缓动。" }
       ],
       "text": [
@@ -707,60 +799,85 @@
       "vertical": "两张卡上下排列。"
     },
     {
-      "id": "S18",
-      "section": "招聘岗位",
-      "start": 96,
-      "end": 102,
+      "id": "S20",
+      "section": "招聘岗位与投递",
+      "start": 117,
+      "end": 124,
       "purpose": "硕士岗位。",
       "beats": [
-        { "t": [0, 0.8], "src": "G", "scene": "job_card", "do": "左侧 40% 深蓝面板入场，右侧 60% 为 S10 终端与 S11 白板画面交替。" },
-        { "t": [0.8, 6.0], "src": "G", "scene": "job_card", "do": "文字静止，背景画面缓动。" }
+        { "t": [0, 0.8], "src": "G", "scene": "job_card", "do": "左侧 40% 深蓝面板入场，右侧 60% 为 S11 终端与 S12 白板画面交替。" },
+        { "t": [0.8, 7.0], "src": "G", "scene": "job_card", "do": "文字静止，背景画面缓动。" }
       ],
       "text": [
-        { "t": [0.2, 6.0], "style": "label", "zone": "panel", "content": "硕士" },
-        { "t": [0.3, 6.0], "style": "h2", "zone": "panel", "content": "算法研发工程师" },
-        { "t": [0.4, 6.0], "style": "count", "zone": "panel", "content": "5 人" },
-        { "t": [0.5, 6.0], "style": "body", "zone": "panel", "content": "行业模型适配优化方向" }
+        { "t": [0.2, 7.0], "style": "label", "zone": "panel", "content": "硕士" },
+        { "t": [0.3, 7.0], "style": "h2", "zone": "panel", "content": "算法研发工程师" },
+        { "t": [0.4, 7.0], "style": "count", "zone": "panel", "content": "5 人" },
+        { "t": [0.5, 7.0], "style": "body", "zone": "panel", "content": "行业模型适配优化方向" }
       ],
-      "vo": { "text": "算法研发，期待你用实验与代码，让模型适配工业场景。", "t": [0.3, 5.6] },
+      "vo": { "text": "算法研发，期待你用实验与代码，让模型适配工业场景。", "t": [0.4, 5.6] },
       "subtitle": true,
       "audio": [],
       "transition_out": "版式保持，仅替换内容。",
       "vertical": "面板在下半屏，画面在上半屏。"
     },
     {
-      "id": "S19",
-      "section": "招聘岗位",
-      "start": 102,
-      "end": 108,
+      "id": "S21",
+      "section": "招聘岗位与投递",
+      "start": 124,
+      "end": 131,
       "purpose": "博士岗位。",
       "beats": [
-        { "t": [0, 0.8], "src": "G", "scene": "job_card", "do": "沿用 S18 版式；右侧为 S14 讨论与 S09 多视图画面交替。" },
-        { "t": [0.8, 6.0], "src": "G", "scene": "job_card", "do": "文字静止，背景画面缓动。" }
+        { "t": [0, 0.8], "src": "G", "scene": "job_card", "do": "沿用 S20 版式；右侧为 S15 讨论与 S10 多视图画面交替。" },
+        { "t": [0.8, 7.0], "src": "G", "scene": "job_card", "do": "文字静止，背景画面缓动。" }
       ],
       "text": [
-        { "t": [0.2, 6.0], "style": "label", "zone": "panel", "content": "博士" },
-        { "t": [0.3, 6.0], "style": "h2", "zone": "panel", "content": "人工智能研究员" },
-        { "t": [0.4, 6.0], "style": "count", "zone": "panel", "content": "3 人" },
-        { "t": [0.5, 6.0], "style": "body", "zone": "panel", "content": "机器视觉｜自然语言处理｜三维重建｜多模态" },
-        { "t": [0.6, 6.0], "style": "body", "zone": "panel", "content": "能源场景AI模型核心技术攻关 · FDE落地体系搭建" },
-        { "t": [0.8, 6.0], "style": "notice", "zone": "panel", "content": "研究方向以正式招聘简章为准" }
+        { "t": [0.2, 7.0], "style": "label", "zone": "panel", "content": "博士" },
+        { "t": [0.3, 7.0], "style": "h2", "zone": "panel", "content": "人工智能研究员" },
+        { "t": [0.4, 7.0], "style": "count", "zone": "panel", "content": "3 人" },
+        { "t": [0.5, 7.0], "style": "body", "zone": "panel", "content": "机器视觉｜自然语言处理｜三维重建｜多模态" },
+        { "t": [0.6, 7.0], "style": "body", "zone": "panel", "content": "能源场景AI模型核心技术攻关 · FDE落地体系搭建" },
+        { "t": [0.8, 7.0], "style": "notice", "zone": "panel", "content": "研究方向以正式招聘简章为准" }
       ],
-      "vo": { "text": "人工智能研究，期待你攻关能源场景模型的核心技术。", "t": [0.3, 5.6] },
+      "vo": { "text": "人工智能研究，期待你攻关能源场景模型的核心技术。", "t": [0.4, 5.6] },
       "subtitle": true,
       "audio": [],
-      "transition_out": "硬切。",
-      "vertical": "同 S18。"
+      "transition_out": "硬切至 S22 招聘流程。",
+      "vertical": "同 S20。"
     },
     {
-      "id": "S20",
-      "section": "回扣与投递入口",
-      "start": 108,
-      "end": 113,
+      "id": "S22",
+      "section": "招聘岗位与投递",
+      "start": 131,
+      "end": 138,
+      "purpose": "给出投递前需要知道的流程、地点与时效。",
+      "beats": [
+        { "t": [0, 1.0], "src": "G", "scene": "apply_flow", "do": "深蓝底，青色线从左向右画出时间轴。" },
+        { "t": [1.0, 7.0], "src": "G", "scene": "apply_flow", "do": "五个流程节点依次点亮；下方出现工作地点与时效提示，1.8 秒后全部静止。" }
+      ],
+      "text": [
+        { "t": [0.2, 7.0], "style": "label", "zone": "top-left", "content": "招聘流程" },
+        { "t": [0.4, 7.0], "style": "body", "zone": "timeline", "content": "简历投递 → 简历评估 → 面试 → 意向沟通 → 发放录用通知" },
+        { "t": [2.4, 7.0], "style": "body", "zone": "lower-third", "content": "工作地点：河南平顶山（公司总部）｜部分岗位按项目需要统筹调配" },
+        { "t": [3.4, 7.0], "style": "tag", "zone": "lower-third", "content": "岗位招满即止，建议尽早投递" }
+      ],
+      "vo": { "text": "工作地点在河南平顶山，岗位招满即止，欢迎尽早投递。", "t": [0.3, 5.6] },
+      "subtitle": true,
+      "audio": [
+        { "t": 1.0, "cue": "节点点亮的短促提示音 ×5" }
+      ],
+      "transition_out": "时间轴末端的节点放大，转入 S23 场景工作台。",
+      "vertical": "流程节点纵向排列，地点与时效置于下方。",
+      "source": "客户文案“HOW TO APPLY”段；简历评估标准与毕业时间要求放在落地页。"
+    },
+    {
+      "id": "S23",
+      "section": "回扣与落版",
+      "start": 138,
+      "end": 143,
       "purpose": "标准被下一位同事复用，回到人。",
       "beats": [
         { "t": [0, 2.4], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "带“新同事”标签的光标打开“场景应用规范 1.3 版 › 案例 017”；主图与适配后模型的框线出现，构图与 S01 定格一致。" },
-        { "t": [2.4, 5.0], "src": "A", "asset": "V19_PROFILE", "do": "新同事侧脸，神情转为自信。" }
+        { "t": [2.4, 5.0], "src": "A", "asset": "V_PROFILE", "do": "新同事侧脸，神情转为自信。" }
       ],
       "text": [
         { "t": [0.3, 2.3], "style": "tag", "zone": "anchor:cursor", "content": "新同事" },
@@ -771,14 +888,14 @@
       "audio": [
         { "t": 0.4, "cue": "鼠标点击" }
       ],
-      "transition_out": "青色线从标题下方向右延伸，带入 S21。",
+      "transition_out": "青色线从标题下方向右延伸，带入 S24。",
       "vertical": "标题分三行：2027届，来做那个／定义能源AI模型／应用标准的人。"
     },
     {
-      "id": "S21",
-      "section": "回扣与投递入口",
-      "start": 113,
-      "end": 120,
+      "id": "S24",
+      "section": "回扣与落版",
+      "start": 143,
+      "end": 150,
       "purpose": "品牌落版与投递入口，完整停留 7 秒。",
       "beats": [
         { "t": [0, 0.8], "src": "G", "scene": "end_card", "do": "深蓝底，青色线从左侧画到分隔位置；文字与二维码位依次入场。" },
@@ -790,7 +907,7 @@
         { "t": [0.4, 7.0], "style": "h1", "zone": "left", "content": "让AI看懂真实世界" },
         { "t": [0.5, 7.0], "style": "body", "zone": "right", "content": "[正式投递二维码，待补充]" },
         { "t": [0.5, 7.0], "style": "body", "zone": "right", "content": "校招邮箱：以官方发布为准" },
-        { "t": [0.6, 7.0], "style": "notice", "zone": "bottom-left", "content": "总部：河南·平顶山｜部分岗位根据项目需要统筹调配｜部分画面由AI生成，仅作工作场景示意" }
+        { "t": [0.6, 7.0], "style": "notice", "zone": "bottom-left", "content": "部分画面由AI生成，仅作工作场景示意" }
       ],
       "vo": { "text": "加入智数科技。让AI看懂真实世界。", "tts": "加入智数科技。让A I看懂真实世界。", "t": [0.2, 3.6] },
       "subtitle": false,
@@ -802,10 +919,10 @@
     }
   ],
   "versions": {
-    "master_16x9_120s": "全部 21 镜。",
-    "vertical_9x16_120s": "镜头与时间不变；代码场景按各镜 vertical 字段原生重排，AI 画面中央裁切或使用 9:16 版本。",
+    "master_16x9_150s": "全部 24 镜。",
+    "vertical_9x16_150s": "镜头与时间不变；代码场景按各镜 vertical 字段原生重排，AI 画面中央裁切或使用 9:16 版本。",
     "cut_30s": {
-      "shots": "S01（5 秒）→ S04 试点（6 秒）→ S05（截 5 秒）→ S16（5 秒）→ 四岗位合并卡（5 秒，新代码场景 job_overview）→ S21（4 秒）",
+      "shots": "S01（5 秒）→ S04 试点（6 秒）→ S06（截 5 秒）→ S18（5 秒）→ 四岗位合并卡（5 秒，新代码场景 job_overview）→ S24（4 秒）",
       "vo": [
         "AI，怎样看懂真实世界？",
         "平顶山入选“国字号”数据标注试点，智数科技是核心运营载体。",
