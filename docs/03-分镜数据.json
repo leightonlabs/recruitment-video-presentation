@@ -319,7 +319,7 @@
         { "t": [3.0, 5.0], "src": "G", "scene": "mark_target", "asset": "IMG_HERO", "do": "画面定格并提亮到 −0.8 EV；琥珀色虚线框落在压力表反光上，标为通用模型的误判；随后青色多边形沿真正的锈蚀边界描出（0.6 秒），顶点方块弹出。" }
       ],
       "text": [
-        { "t": [0.8, 4.8], "style": "h1", "zone": "top-left", "content": "AI，怎样看懂真实世界？" },
+        { "t": [0.8, 4.8], "style": "h1", "zone": "lower-third", "content": "AI，怎样看懂真实世界？" },
         { "t": [3.1, 4.9], "style": "tag", "zone": "anchor:glare", "content": "通用模型：渗漏？" },
         { "t": [3.5, 5.0], "style": "tag", "zone": "anchor:target", "content": "边界案例 017" },
         { "t": [0, 4.8], "style": "notice", "zone": "bottom-left", "content": "本片部分画面由AI生成，仅作工作场景示意" }

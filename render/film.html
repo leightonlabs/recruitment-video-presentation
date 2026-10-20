@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>粗剪渲染</title>
+<style>
+@font-face{font-family:NS;src:url(../build/fonts/NotoSansSC-400.ttf);font-weight:400}
+@font-face{font-family:NS;src:url(../build/fonts/NotoSansSC-700.ttf);font-weight:700}
+@font-face{font-family:NS;src:url(../build/fonts/NotoSansSC-900.ttf);font-weight:900}
+@font-face{font-family:JB;src:url(../build/fonts/JetBrainsMono-400.ttf);font-weight:400}
+@font-face{font-family:JB;src:url(../build/fonts/JetBrainsMono-700.ttf);font-weight:700}
+@font-face{font-family:LC;src:url(../build/fonts/LongCang-400.ttf)}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#062045;font-family:NS}
+#stage{position:absolute;inset:0}
+#txt{position:absolute;inset:0;pointer-events:none}
+.zone{position:absolute;display:flex;flex-direction:column;width:max-content}
+.t{white-space:pre-line;will-change:opacity,transform}
+.t-h1{font:700 72px/1.25 NS;color:#fff;letter-spacing:.02em;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+.t-h2{font:700 56px/1.3 NS;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.3)}
+.t-stat{font:900 220px/1 NS;color:#0F2B46}
+.t-count{font:900 128px/1 NS;color:#2DD4BF}
+.t-body{font:400 32px/1.5 NS;color:#E2E8F0}
+.t-label{font:700 26px/1.4 NS;letter-spacing:.2em;color:#2DD4BF}
+.t-tag{font:700 22px/1.3 NS;color:#2DD4BF;padding:4px 12px;border:2px solid currentColor;background:rgba(6,32,69,.75);align-self:flex-start}
+.t-notice{font:400 18px/1.4 NS;color:rgba(255,255,255,.6)}
+.t-hand{font:44px/1.3 LC;color:#0F2B46}
+.t-code{font:26px/1.6 JB;color:#cbd5e1}
+.light .t-h1,.light .t-h2,.light .t-body{color:#0F2B46;text-shadow:none}
+.light .t-label{color:#2DB4AA}
+.light .t-notice{color:#7B8B9A}
+.light .t-tag{background:#fff;color:#2DB4AA}
+.amber .t-tag{color:#F59E0B}
+#rev{position:absolute;right:18px;top:14px;font:400 17px/1 JB,NS;color:rgba(255,255,255,.62);background:rgba(0,0,0,.38);padding:7px 10px;border-radius:4px;letter-spacing:.02em}
+</style></head>
+<body>
+<canvas id="stage" width="1920" height="1080"></canvas>
+<div id="txt"></div>
+<div id="rev"></div>
+<script type="module" src="./film.js"></script>
+</body></html>
