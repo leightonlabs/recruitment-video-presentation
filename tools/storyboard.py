@@ -2,7 +2,7 @@
 """分镜数据工具：校验 docs/03-分镜数据.json，并导出字幕与 AI 提示词表。
 
 用法：
-  python3 tools/storyboard.py check              校验时间、阅读速度、配音语速与资产引用
+  python3 tools/storyboard.py check              校验时间、阅读速度、配音语速、用词与资产引用
   python3 tools/storyboard.py summary            按镜头列出时间、路线和语速，并统计各路线时长
   python3 tools/storyboard.py srt [输出路径]      导出字幕，默认 build/subtitles.srt
   python3 tools/storyboard.py prompts [输出路径]  生成 AI 提示词表，默认 docs/07-AI生成提示词.md
@@ -32,7 +32,7 @@ def load():
 
 def count_chars(text):
     """统计需要阅读或朗读的字符：汉字、字母和数字，不计标点与空格。"""
-    return len(re.findall(r"[一-鿿A-Za-z0-9]", text))
+    return len(re.findall(r"[\u4e00-\u9fffA-Za-z0-9]", text))
 
 
 def vo_cps(shot):
@@ -41,6 +41,20 @@ def vo_cps(shot):
         return 0.0
     a, b = vo["t"]
     return count_chars(vo.get("tts", vo["text"])) / (b - a)
+
+
+def copy_issues(text, rules):
+    """按 copy_rules 检查旁白或屏幕文字：返回 (错误, 提醒)。"""
+    errors = [f"出现禁用词“{w}”" for w in rules.get("banned", []) if w in text]
+    hidden = text
+    for w in rules.get("banned", []):
+        hidden = hidden.replace(w, "")
+    warnings = [f"出现应尽量避免的“{w}”" for w in rules.get("avoid", []) if w in hidden]
+    allow = set(rules.get("latin_allow", []))
+    latin = sorted({w for w in re.findall(r"[A-Za-z]+", text) if w not in allow})
+    if latin:
+        warnings.append("出现英文 " + "、".join(latin))
+    return errors, warnings
 
 
 def routes_of(shot):
@@ -56,6 +70,12 @@ def check(data):
     styles = data["design_tokens"]["type_16x9"]
     min_hold = data["design_tokens"]["motion"]["min_text_hold_s"]
     max_clip = data["ai_policy"]["max_clip_s"]
+    rules = data.get("copy_rules", {})
+
+    def copy_check(where, text):
+        errs, warns = copy_issues(text, rules)
+        errors.extend(f"{where}: {e}" for e in errs)
+        warnings.extend(f"{where}: {w}" for w in warns)
 
     def on_grid(x):
         return abs(x * fps - round(x * fps)) < EPS
@@ -121,7 +141,8 @@ def check(data):
             if item["style"] not in styles:
                 errors.append(f"{sid} 文字「{label}」: 未定义样式 {item['style']}")
             if item["style"] == "code":
-                continue  # 代码作为画面质感，不要求逐字读完
+                continue  # 代码作为画面质感，不要求逐字读完，也不做用词检查
+            copy_check(f"{sid} 文字「{label}」", item["content"])
             need = max(min_hold, count_chars(item["content"]) / READ_CPS)
             if b - a + EPS < need:
                 errors.append(f"{sid} 文字「{label}」: 停留 {b - a:.2f} 秒，至少需要 {need:.2f} 秒")
@@ -138,10 +159,13 @@ def check(data):
                 errors.append(f"{sid}: 旁白语速 {cps:.1f} 音节/秒，超过 {VO_CPS_MAX}")
             elif cps > VO_CPS_WARN:
                 warnings.append(f"{sid}: 旁白语速 {cps:.1f} 音节/秒，偏快")
+            copy_check(f"{sid} 旁白", vo["text"])
             for p in vo.get("phrases", []):
                 pa, pb = p["t"]
                 if pa < a - EPS or pb > b + EPS:
                     errors.append(f"{sid}: 旁白分句「{p['text']}」超出旁白窗口")
+                if count_chars(p["text"]) / (pb - pa) > VO_CPS_MAX:
+                    errors.append(f"{sid}: 旁白分句「{p['text']}」语速超过 {VO_CPS_MAX} 音节/秒")
 
     if abs(cursor - total) > EPS:
         errors.append(f"全片合计 {cursor} 秒，与设定时长 {total} 秒不符")
@@ -240,6 +264,11 @@ def srt(data, out):
     print(f"已写入 {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}（{len(cues)} 条）")
 
 
+def english(title, body):
+    """英文版本折叠在 <details> 中，只在模型不支持中文时使用。"""
+    return ["", f"<details><summary>{title}</summary>", "", f"```text\n{body}\n```", "", "</details>"]
+
+
 def prompts(data, out):
     pol = data["ai_policy"]
     usage = asset_usage(data)
@@ -256,23 +285,18 @@ def prompts(data, out):
         f"- **动作：** {pol['action']}",
         f"- **构图：** {pol['framing']}",
         "- **文字：** 画面内不得出现任何可读文字、数字、Logo 或标牌；所有文字由代码后期叠加。",
-        "- **视频提示词** = 通用风格前缀 + 资产提示词；**负面提示词** = 通用负面词 + 资产补充。不支持负面提示词的模型，把“no text, no logos, no readable screens”写进正向提示词末尾。",
+        "- **组合方式：** 视频提示词 = 通用风格前缀 + 资产提示词；负面提示词 = 通用负面词 + 资产补充。不支持负面提示词的模型，在正向提示词末尾加上“画面中没有文字、Logo 和可读的屏幕”。",
+        "- **语言：** 优先使用中文提示词；只支持英文的模型，展开各处的英文版本。",
         "",
-        "**通用风格前缀（EN）**",
-        "",
-        f"```text\n{pol['style_prefix_en']}\n```",
-        "",
-        "**通用风格前缀（中文）**",
+        "**通用风格前缀**",
         "",
         f"```text\n{pol['style_prefix_zh']}\n```",
+        *english("英文版本", pol["style_prefix_en"]),
         "",
-        "**通用负面词（EN）**",
-        "",
-        f"```text\n{pol['negative_en']}\n```",
-        "",
-        "**通用负面词（中文）**",
+        "**通用负面词**",
         "",
         f"```text\n{pol['negative_zh']}\n```",
+        *english("英文版本", pol["negative_en"]),
         "",
         "## 资产清单",
         "",
@@ -281,7 +305,7 @@ def prompts(data, out):
     ]
     for name, spec in data["assets"].items():
         uses = "、".join(
-            f"{sid}（{sec:.1f}s{'，可选' if opt else ''}）" if spec["kind"] == "video" else sid
+            f"{sid}（{sec:.1f} 秒{'，可选' if opt else ''}）" if spec["kind"] == "video" else sid
             for sid, sec, opt in usage[name]
         )
         gen = f"{spec['gen_seconds']} 秒 · {spec['camera']}" if spec["kind"] == "video" else spec["output"]
@@ -307,19 +331,15 @@ def prompts(data, out):
             lines.append(f"- **生成后：** {spec['after_generation']}")
         lines += [
             "",
-            "**提示词（EN）**",
-            "",
-            f"```text\n{prefix_en}{spec['prompt_en']}\n```",
-            "",
-            "**提示词（中文）**",
+            "**提示词**",
             "",
             f"```text\n{prefix_zh}{spec['prompt_zh']}\n```",
+            *english("英文版本", prefix_en + spec["prompt_en"]),
             "",
             "**负面提示词**",
             "",
-            f"```text\n{neg_en}\n```",
-            "",
             f"```text\n{neg_zh}\n```",
+            *english("英文版本", neg_en),
             "",
             "**验收**",
             "",
