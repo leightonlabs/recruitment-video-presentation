@@ -1,182 +1,826 @@
-[
-  {
-    "n": 1,
-    "start": 0,
-    "end": 5,
-    "visual": "能源设备巡检画面中，一束工作灯扫过设备轮廓。画面定格，一个细小边界被青色线条框住。",
-    "camera": "设备细节近景缓推，定格后加入二维标注线；从第一秒给出具体对象。",
-    "vo": "AI，怎样看懂真实世界？",
-    "screen": "AI，怎样看懂真实世界？"
+{
+  "version": "3.1",
+  "title": "让AI看懂真实世界",
+  "subtitle": "2027届，来做那个定义能源AI模型应用标准的人",
+  "notes": [
+    "v3.1：按客户更新文案调整为“行业模型应用”定位；新增 S04 国家数据标注试点镜头；FDE 按客户文案保留。用词与语言要求见 copy_rules。",
+    "本文件是制作的唯一数据源：代码渲染、字幕导出、AI 提示词表和时间校验都从这里读取。修改后运行 python3 tools/storyboard.py check。",
+    "镜头内的 t 均为相对本镜起点的秒数；绝对帧号 = round((镜头 start + t) × fps)。",
+    "vo.t 为配音前的预估窗口，录音后用实测时间替换，镜头长度原则上不变。"
+  ],
+  "format": {
+    "fps": 25,
+    "duration_s": 120,
+    "master": { "w": 1920, "h": 1080, "aspect": "16:9" },
+    "vertical": { "w": 1080, "h": 1920, "aspect": "9:16", "strategy": "代码场景按竖版版式原生重渲染；AI 画面取中央安全带裁切，主体镜头可另出 9:16 版本。" },
+    "delivery": "H.264 High，yuv420p，CRF 16–18，AAC 48 kHz 320 kbps；母版另存 ProRes 422 HQ。",
+    "fps_note": "AI 视频多为 24 fps，按 25 fps 直接变速套入（快 4.2%，无插帧）；30 fps 素材按丢帧转换。"
   },
-  {
-    "n": 2,
-    "start": 5,
-    "end": 10,
-    "visual": "同一幅设备图像出现在标注屏幕上。鼠标调整目标边界；屏幕反光中的眼睛专注观察。",
-    "camera": "巡检画面匹配切到电脑屏幕，再切眼睛特写；建立现场与数据工作的联系。",
-    "vo": "答案，藏在一条条被认真处理的数据里。",
-    "screen": "真实场景 → 数据"
+  "routes": {
+    "G": "代码生成：HTML / Canvas / three.js 场景逐帧渲染，文字、界面、框线、点云、图表、转场全部由此产生。",
+    "I": "AI 静帧 + 代码运动：先生成高分辨率静帧，再由代码做推拉、光效与叠加，框线可与画面像素精确对齐。",
+    "A": "AI 视频底板：只生成无文字、无可读屏幕的人物与环境画面，单段不超过 5 秒。",
+    "R": "实拍或公司真实素材：可替换对应的 I / A 资产，时间、版式和叠加层不变。"
   },
-  {
-    "n": 3,
-    "start": 10,
-    "end": 15,
-    "visual": "视点从屏幕拉开，露出正在工作的员工与团队；切公司实际门牌或品牌墙。",
-    "camera": "由近到中景后拉，接稳定品牌镜头；公司名称清楚出现。",
-    "vo": "在智数科技，我们从数据出发，走向AI应用。",
-    "screen": "河南平煤神马智数科技有限公司｜2027届校园招聘"
+  "design_tokens": {
+    "color": {
+      "navy_900": "#062045",
+      "navy_800": "#0F2B46",
+      "navy_700": "#123E54",
+      "teal_400": "#2DD4BF",
+      "teal_500": "#2DB4AA",
+      "amber_500": "#F59E0B",
+      "amber_700": "#B45309",
+      "paper": "#F8FAFC",
+      "ink": "#0F2B46",
+      "ink_muted": "#7B8B9A",
+      "on_dark_muted": "#ACB6C0",
+      "white": "#FFFFFF"
+    },
+    "color_source": "取样自校招资料 PNG：深底 #0F2B46、封面 #062045、青色 #2DD4BF / #2DB4AA、博士人数 #B45309、浅底 #F8FAFC。正式色值以公司品牌规范为准。",
+    "font": {
+      "sans": "Noto Sans SC 400 / 700 / 900（Google Fonts，SIL OFL 1.1；与校招资料 PDF 内嵌字体一致）",
+      "mono": "JetBrains Mono 400 / 700（SIL OFL 1.1），中文回退 Noto Sans SC",
+      "hand": "Long Cang（SIL OFL 1.1），仅用于便签与白板手写"
+    },
+    "type_16x9": {
+      "h1": { "px": 72, "weight": 700 },
+      "h2": { "px": 56, "weight": 700 },
+      "stat": { "px": 220, "weight": 900 },
+      "count": { "px": 128, "weight": 900 },
+      "body": { "px": 32, "weight": 400 },
+      "label": { "px": 26, "weight": 700, "tracking": "0.2em" },
+      "tag": { "px": 22, "weight": 700 },
+      "subtitle": { "px": 40, "weight": 700 },
+      "notice": { "px": 18, "weight": 400, "opacity": 0.6 },
+      "code": { "px": 26, "weight": 400 },
+      "hand": { "px": 44, "weight": 400, "font": "hand" }
+    },
+    "type_9x16_scale": 1.15,
+    "zones_16x9": {
+      "margin_x": 128,
+      "margin_y": 96,
+      "top-left": [128, 96],
+      "center-left": [128, 420],
+      "center": [960, 540],
+      "lower-third_y": 820,
+      "subtitle_baseline_y": 990,
+      "bottom-left": [128, 1020],
+      "vertical_safe_band_x": [656, 1264]
+    },
+    "zones_9x16": { "margin_x": 72, "top_y": 220, "subtitle_baseline_y": 1540, "avoid_right_px": 140, "avoid_bottom_px": 320 },
+    "motion": {
+      "ease_enter": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "ease_move": "cubic-bezier(0.65, 0, 0.35, 1)",
+      "enter_s": 0.5,
+      "exit_s": 0.3,
+      "stroke_draw_s": 0.6,
+      "count_up_s": 1.2,
+      "min_text_hold_s": 1.5,
+      "max_scale_change_per_5s": 0.06,
+      "forbidden": ["弹跳与弹性缓动", "整屏高速穿梭", "无目的的三维旋转"]
+    },
+    "cyan_line": {
+      "color": "teal_400",
+      "width_px": 4,
+      "ui_width_px": 3,
+      "glow": "同色 8px 模糊，40% 不透明",
+      "cap": "round",
+      "node": "10px 方形起点",
+      "behaviors": ["描出：沿路径描出", "流动：120px 高亮段沿路径移动，表示数据流向", "变形：线段变为框、多边形或连接线"],
+      "rule": "全片唯一允许跨镜头延续的图形元素；每个段落至少出现一次。"
+    },
+    "plate_grade": {
+      "black_lift": "#0A1A2E",
+      "shadows": "偏青",
+      "skin": "保持自然暖色",
+      "saturation": -10,
+      "grain": "2%",
+      "vignette": "15%",
+      "implementation": "所有 A / I / R 画面套同一份 .cube LUT，再叠颗粒与暗角。"
+    },
+    "subtitle_style": "Noto Sans SC 700，40px，白字，2px 深蓝描边 + 柔和投影，单行不超过 16 字；与屏幕标题不在同一区域。"
   },
-  {
-    "n": 4,
-    "start": 15,
-    "end": 21,
-    "visual": "图像目标框定、语音波形核对、文本标签三组近景，以同一青色确认标记连接。",
-    "camera": "三个可读细节镜头，每个约2秒；优先看清动作，不用密集代码铺满画面。",
-    "vo": "圈准一个目标，校对一段语音，核实一条文本。",
-    "screen": "图像｜语音｜文本"
+  "global_rules": [
+    "用词以客户文案为准：“数据标注”只出现在国家试点的正式名称中（如“数据标注先行先试”），不用来描述公司与岗位的工作，“标注”也尽量不用；工作内容以数据集配套、场景建模、模型适配、场景验证表述。",
+    "旁白与屏幕文字以中文为主：除 AI 与客户文案中的 FDE 外不用英文缩写，版本号写作“1.3 版”，编号写作“案例 017”；代码画面只作质感，注释与字符串用中文。",
+    "所有文字、数字、界面、框线和图表只由代码生成，AI 画面中不出现任何可读文字、Logo 或标牌。",
+    "需要与画面对齐的框线（框、多边形、目标标签）只叠在静帧（I）或锁定机位素材上，不追踪运动镜头。",
+    "AI 人物不承担固定主角：同一人物不跨镜复现，连续性由同一边界样本、青色连接线和统一调色承担。",
+    "AI 人物以侧面、肩后、手部和中景为主，不看镜头；片头与片尾注明“部分画面由AI生成，仅作工作场景示意”。",
+    "演示界面中的案例编号、版本号均为示意；适配前后的对比只用单个示意样本，不出现客户名称、准确率、效率提升等性能数字或业绩结论。",
+    "58 人为招聘计划，任何画面不得暗示现有团队规模；“定义能源AI模型应用标准”是对候选人的邀请，片中的“标准”落在可复用的场景应用规范上，不暗示已制定国家或行业标准。",
+    "R 素材到位时按资产逐个替换，镜头时长、文字层和转场保持不变。",
+    "试点信息按客户提供的介绍表述并写清主体：入选的是平顶山市，集团是试点申报中坚力量，智数科技是试点任务核心运营载体；不把城市入选写成公司获批，试点名称使用正式名称“数据标注先行先试（领域创新）工作城市”。",
+    "片中不出现中国或省市地图轮廓（公开发布的地图须使用审核通过的标准地图）；试点信息用抽象点阵与环形图表达。"
+  ],
+  "ai_policy": {
+    "max_clip_s": 5,
+    "workflow": "文生图出首帧并定稿 → 图生视频（首帧锁定）→ 每个资产至少生成 3 个候选 → 按验收项挑选 → 截取最稳定的片段。",
+    "camera": "锁定机位，或单一方向的缓慢推、拉、摇；禁止甩镜、环绕与穿梭。",
+    "action": "每段只写一个主要动作，动作在 2–3 秒内完成。",
+    "framing": "主体位于画面中央，确保 9:16 中央裁切后仍成立。",
+    "style_prefix_en": "Photorealistic cinematic footage, 16:9, natural film look, full-frame cinema camera, 35mm or 50mm lens, shallow depth of field, soft contrast. Color palette: deep navy-blue shadows, subtle teal light from monitors, warm practical light on skin. Setting: a modern tech office or an industrial site in Henan, China. People are East Asian, in their 20s to 30s, wearing plain navy, grey or white shirts and knitwear with no logos.",
+    "style_prefix_zh": "写实电影质感，16:9，自然胶片感，全画幅电影机，35mm或50mm镜头，浅景深，柔和反差。色调：深海军蓝暗部，显示器带来的轻微青绿色光，人物皮肤为暖色实用光。场景为中国河南的现代科技办公室或工业现场。人物为20至30多岁的中国青年，穿无标识的深蓝、灰色或白色素色衬衫、针织衫。",
+    "negative_en": "text, letters, words, Chinese characters, numbers, subtitles, captions, watermark, logo, brand name, readable screen content, user interface text, signage, distorted hands, extra fingers, deformed face, face morphing, identity drift, flicker, jitter, warping, fast camera movement, whip pan, orbiting camera, fisheye, cartoon, CGI look, oversaturated neon, sci-fi hologram, people looking at camera",
+    "negative_zh": "文字、字母、汉字、数字、字幕、水印、Logo、品牌名、可读的屏幕内容、界面文字、标牌、手部变形、多余手指、面部变形、人物身份漂移、闪烁、抖动、画面扭曲、快速运镜、甩镜、环绕运镜、鱼眼、卡通、CG渲染感、过饱和霓虹、科幻全息、人物看镜头"
   },
-  {
-    "n": 5,
-    "start": 21,
-    "end": 27,
-    "visual": "标注者遇到遮挡或反光样本，将其加入“边界案例”；同事一起比较两个判断，并查阅规范。",
-    "camera": "屏幕近景接双人侧面中景，再切规范局部；把认真与协作拍成具体动作。",
-    "vo": "面对模糊的边界，先对齐规则，再做出判断。",
-    "screen": "边界案例｜规则对齐"
+  "hero_sample": {
+    "id": "边界案例 017",
+    "object": "煤化工装置区一段水平工艺管道的法兰连接处：左侧短立管上有圆形压力表，右后方有红色阀门手轮。",
+    "target": "法兰下沿的锈蚀与渗漏水痕（类别：渗漏锈蚀）。",
+    "model_error": "通用模型把压力表玻璃的反光误判为渗漏，并漏检被蒸汽遮挡的锈蚀边缘。",
+    "ambiguities": ["遮挡：一缕白色蒸汽挡住锈迹右下边缘，边界看不清，通用模型在此漏检。", "反光：压力表玻璃强反光，通用模型将其误判为渗漏。"],
+    "rule_1_3": ["被蒸汽遮挡的部分按可见轮廓外推，并勾选“遮挡”属性。", "表盘玻璃反光区域不计入目标。"],
+    "polygon": null,
+    "target_region_hint": [0.45, 0.55, 0.62, 0.72],
+    "glare_region_hint": [0.28, 0.3, 0.4, 0.48],
+    "polygon_note": "polygon 为 IMG_HERO 归一化坐标的顶点数组；主图定稿后读图标定并写入，标定前渲染使用 target_region_hint 与 glare_region_hint（x0, y0, x1, y1）。",
+    "pointcloud": "程序生成同构点云：管道、双法兰与 8 颗螺栓、压力表立管、阀门手轮；目标点在下沿。若公司提供可公开 .ply / .pcd / .las 文件，直接替换。",
+    "story": "S01 通用模型误判 → S02 对照现场修正边界 → S06 出现两种判断 → S07 写入场景应用规范 1.3 版 → S08 进入三维场景 → S10 场景校验找出同类漏检样本 023 → S11 对照实验 → S12 适配后模型通过现场验证 → S13 带教讲解 → S15 归档 → S20 被下一位同事复用。"
   },
-  {
-    "n": 6,
-    "start": 27,
-    "end": 33,
-    "visual": "质检者逐项复核；规范文档补充案例示图；同类样本按更新后的规则重新检查。",
-    "camera": "规范示图与样本画面形状匹配切换；最后停在清楚的复核记录上。",
-    "vo": "把一次判断，沉淀成可以重复使用的标准。",
-    "screen": "标注 → 质检 → 规范迭代"
+  "assets": {
+    "IMG_HERO": {
+      "kind": "image",
+      "route": "I",
+      "required": true,
+      "output": "3840×2160（至少 2560×1440），16:9",
+      "prompt_en": "Photorealistic close-up photograph of industrial piping at a coal-chemical plant at night. A horizontal steel process pipe crosses the frame; in the exact center is a bolted flange joint with eight hex bolts. A brown rust streak and a wet leak trace run down from the lower edge of the flange. A thin wisp of white steam drifts across the lower right part of the flange and partly hides the edge of the rust. On the left, a round analog pressure gauge sits on a short vertical pipe; its glass face shows a strong specular glare that hides the dial markings. On the right, slightly behind, a red valve handwheel. Background: out-of-focus pipe racks and a few small amber lights in deep navy darkness. One warm work light from the upper left, cool blue ambient light. Camera at flange height, 50mm lens, f/2.8, crisp metal texture, no people.",
+      "prompt_zh": "写实特写照片：夜间煤化工装置区的工业管道。一根水平钢制工艺管道横穿画面，画面正中是带8颗六角螺栓的法兰连接处，法兰下沿有一道褐色锈迹和潮湿的渗漏水痕向下延伸。一缕淡白色蒸汽飘过法兰右下方，挡住锈迹边缘的一部分。左侧短立管上有一个圆形指针压力表，表盘玻璃有强烈反光，看不清刻度。右后方有一个红色阀门手轮。背景是虚化的管廊和几盏琥珀色小灯，整体处于深海军蓝的暗环境。左上方一盏暖色工作灯，环境光偏冷蓝。机位与法兰同高，50mm镜头，f/2.8，金属质感清晰，无人物。",
+      "negative_extra_en": "readable gauge numbers, labels on pipes, warning signs, people",
+      "negative_extra_zh": "可读的表盘数字、管道标签、警示牌、人物",
+      "acceptance": [
+        "锈迹与渗漏区域位于画面中央（约 x 45–62%，y 55–72%），在 9:16 中央裁切内完整可见。",
+        "蒸汽只遮住锈迹边缘的一部分，目标仍可辨认。",
+        "压力表反光明显，表盘无可读数字；画面中没有任何文字、标签或标牌。",
+        "法兰、螺栓、立管、手轮结构合理，没有融化或错位的金属件。"
+      ],
+      "after_generation": "定稿后读图标定目标多边形，写入 hero_sample.polygon；同时标定压力表与反光区域的矩形，供 S01、S04、S05、S11 使用。",
+      "replace_with_R": "公司可公开的同类设备实拍照片（≥3840×2160，无人员、无标识、无涉密信息）。"
+    },
+    "IMG_SAMPLES": {
+      "kind": "image",
+      "route": "I",
+      "required": false,
+      "output": "6–8 张，2048×1152，16:9",
+      "prompt_en": "Photorealistic close-up photograph of a bolted steel flange joint on an industrial pipe with a small rust stain near its lower edge. Variation: {daylight with hard shadows | light rain and wet metal | steam partly covering the joint | dim night light with a flashlight spot | dusty surface | fresh paint with a thin rust line}. Centered composition, 50mm lens, no people.",
+      "prompt_zh": "写实特写照片：工业管道上带螺栓的钢制法兰连接处，下沿附近有一小块锈迹。变化条件依次为：{强烈日光与硬阴影｜小雨、金属表面潮湿｜蒸汽遮挡部分连接处｜夜间弱光与手电光斑｜表面积尘｜新漆面上的一道细锈线}。主体居中，50mm镜头，无人物。",
+      "negative_extra_en": "readable labels, warning signs, people",
+      "negative_extra_zh": "可读标签、警示牌、人物",
+      "acceptance": ["每张都能看出法兰与锈迹，且彼此的光线条件明显不同。", "没有文字、标签和人物。"],
+      "fallback": "用 IMG_HERO 的不同裁切、镜像和曝光变化代替。",
+      "replace_with_R": "公司可公开的同类样本图片（去除敏感信息）。"
+    },
+    "V02_EYE": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "锁定机位，微距",
+      "prompt_en": "Extreme close-up of a young East Asian person's eye looking at a computer monitor. Cool teal-blue screen light on the iris, a small bright reflection of a monitor rectangle in the cornea. One slow natural blink, then the eye makes a small movement as if following a detail on the screen. Locked-off camera, macro lens, very shallow depth of field, dark navy surroundings.",
+      "prompt_zh": "极特写：一位中国青年注视电脑屏幕的眼睛。虹膜上映着冷青蓝色的屏幕光，角膜里有一个小而明亮的显示器矩形反光。眼睛自然地缓慢眨一次，随后轻微移动，像在追看屏幕上的细节。锁定机位，微距镜头，极浅景深，周围是深海军蓝的暗部。",
+      "acceptance": ["只眨眼一次，眼部形状稳定无变形。", "反光中没有可读文字。"],
+      "replace_with_R": "实拍员工眼部特写（需本人同意）。"
+    },
+    "V03_OFFICE_PULLBACK": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "缓慢匀速后拉",
+      "prompt_en": "Slow, smooth dolly-back that starts just behind a glowing computer monitor (screen content out of focus) and reveals a modern open-plan office at dusk: three or four young colleagues working at light-wood desks, seen from the side and from behind; one of them turns to talk with a colleague. Warm desk lamps, large windows with a blue-hour sky, navy and teal accent walls. Steady camera.",
+      "prompt_zh": "镜头从一台发光显示器背后开始缓慢匀速后拉（屏幕内容虚焦），逐渐露出黄昏时的现代开放式办公室：三四位年轻同事在浅木色工位前工作，以侧面和背面为主，其中一人转身与同事交谈。暖色台灯，大窗外是蓝调天空，墙面有深蓝与青绿色点缀。机位平稳。",
+      "acceptance": ["后拉匀速，无抖动与突变。", "所有屏幕不可读，人物不看镜头，墙面无文字或 Logo。"],
+      "replace_with_R": "公司办公区实拍后拉镜头。"
+    },
+    "V05_PAIR_DISCUSS": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "锁定机位，极轻微推近",
+      "prompt_en": "Medium side shot of two young colleagues sitting side by side at a desk, comparing something on one monitor whose screen is turned away from the camera. One points at the monitor, the other nods, then turns a page in a printed binder. Calm, attentive, natural gestures. Static camera with a very slight push-in. Warm practical light mixed with cool monitor light.",
+      "prompt_zh": "侧面中景：两位年轻同事并排坐在工位前，对照一台背向镜头的显示器上的内容。一人指向屏幕，另一人点头，随后翻开一本打印的规范文件夹。神情专注，动作自然。机位固定并极轻微推近。暖色实用光与显示器冷光混合。",
+      "acceptance": ["手指与纸张动作自然，无多余手指。", "屏幕与纸面内容不可读。"],
+      "replace_with_R": "两位员工对照讨论的实拍。"
+    },
+    "V07_3D_OVER_SHOULDER": {
+      "kind": "video",
+      "route": "A",
+      "required": false,
+      "gen_seconds": 5,
+      "camera": "锁定机位，肩后",
+      "prompt_en": "Over-the-shoulder shot from behind a young engineer sitting at a large monitor in a dim room. On the screen, an abstract cloud of small cyan dots slowly rotates, with no text and no interface panels. The engineer's hand moves a mouse. The screen is slightly out of focus; shoulder and hair form a soft silhouette. Static camera.",
+      "prompt_zh": "肩后镜头：昏暗房间里，一位年轻工程师坐在大显示器前，屏幕上是由青色小点组成的抽象点云在缓慢旋转，没有文字和界面面板。工程师的手移动鼠标。屏幕略虚焦，肩膀与头发形成柔和剪影。机位固定。",
+      "acceptance": ["屏幕上只有点状图形，无文字与界面。"],
+      "fallback": "省略，image_to_particles 从 0 秒开始。",
+      "replace_with_R": "场景建模工程师操作点云软件的肩后实拍（屏幕内容需可公开）。"
+    },
+    "V09_CODER_HANDS": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "锁定机位，侧面低角度",
+      "prompt_en": "Close-up of hands typing on a dark keyboard; then one hand moves to the mouse and clicks. Monitor light reflects on the fingers, deep navy shadows, very shallow depth of field. Static camera at a slight side angle.",
+      "prompt_zh": "手部特写：双手在深色键盘上打字，随后一只手移向鼠标并点击。显示器的光映在手指上，暗部为深海军蓝，极浅景深。机位固定，略带侧面角度。",
+      "acceptance": ["手指数量与关节正确，键帽无可读字符。"],
+      "replace_with_R": "算法同事编写校验脚本的手部实拍。"
+    },
+    "V10_WHITEBOARD": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "锁定机位，侧面中景",
+      "prompt_en": "Side view medium shot of two young researchers standing at a large whiteboard. One draws a simple box and an arrow with a dark marker while the other watches and gestures. The whiteboard is mostly blank and its marks are out of focus. Bright soft daylight in a meeting room with a navy accent wall. Static camera.",
+      "prompt_zh": "侧面中景：两位年轻研究人员站在大白板前，一人用深色马克笔画出一个简单方框和箭头，另一人在旁观看并做手势。白板大部分空白，笔迹虚焦。会议室光线明亮柔和，有一面深蓝色墙。机位固定。",
+      "acceptance": ["白板上没有可读文字。", "画笔动作自然连贯。"],
+      "replace_with_R": "研究讨论实拍（白板内容可在后期替换为代码画面）。"
+    },
+    "V12_MENTOR": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "平视，锁定机位轻推",
+      "prompt_en": "Eye-level medium shot: an experienced colleague in their early 30s sits next to a new graduate at a desk, patiently explaining while pointing at a printed page and then at the monitor (screen turned away from the camera). The graduate listens, nods and writes in a notebook whose page is not visible. Warm afternoon daylight from a window, relaxed and friendly atmosphere. Static camera with a gentle push-in.",
+      "prompt_zh": "平视中景：一位三十出头的资深同事坐在新入职毕业生身旁，耐心讲解，先指着一页打印文件，再指向显示器（屏幕背向镜头）。毕业生认真听、点头，并在笔记本上记录（看不到纸面）。窗外午后暖阳，气氛轻松友好。机位固定并缓慢推近。",
+      "acceptance": ["两人关系自然，非摆拍式微笑。", "纸面和屏幕内容不可读。"],
+      "replace_with_R": "生产骨干带教新同事的实拍（需本人同意）。"
+    },
+    "V13_TEAM_TABLE": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "锁定机位，极慢横摇",
+      "prompt_en": "Medium-wide shot of three researchers around a meeting table with laptops whose screens face away from the camera. One stands up and points toward a glass board in the background (board out of focus); the other two lean in and discuss. Natural, engaged expressions, soft daylight and warm lamps, navy and teal accents. Static camera with a very slow pan.",
+      "prompt_zh": "中全景：三位研究人员围坐在会议桌旁，笔记本电脑屏幕背向镜头。一人起身指向背景中的玻璃白板（白板虚焦），另两人前倾参与讨论。表情自然投入，柔和日光加暖色台灯，深蓝与青绿色点缀。机位固定，极慢横摇。",
+      "acceptance": ["三人身份在片段内稳定。", "白板与屏幕不可读。"],
+      "replace_with_R": "技术负责人与硕博同事讨论的实拍。"
+    },
+    "V19_PROFILE": {
+      "kind": "video",
+      "route": "A",
+      "required": true,
+      "gen_seconds": 5,
+      "camera": "锁定机位，极慢推近",
+      "prompt_en": "Close-up side profile of a young East Asian graduate sitting in front of a monitor. Cool teal screen light on the face, warm rim light from behind. A calm, focused expression turns into a slight confident smile, then the person leans a little toward the screen. Shallow depth of field, dark navy background. Static camera with a very slow push-in.",
+      "prompt_zh": "侧脸近景：一位中国青年毕业生坐在显示器前，脸上映着冷青色屏幕光，身后有暖色轮廓光。专注平静的神情转为一丝自信的微笑，随后身体略微前倾靠近屏幕。浅景深，深海军蓝背景。机位固定，极慢推近。",
+      "acceptance": ["微笑自然克制，面部无变形。", "人物不看镜头。"],
+      "replace_with_R": "新员工侧脸实拍（需本人同意）。"
+    }
   },
-  {
-    "n": 7,
-    "start": 33,
-    "end": 39,
-    "visual": "工程师旋转三维设备或空间点云，对目标进行分割、框定，坐标轴和标签清楚出现。",
-    "camera": "人物肩后中景切屏幕；围绕同一三维对象小幅旋转，不做无目的空间穿梭。",
-    "vo": "从二维图像，到三维点云，还原场景里的空间关系。",
-    "screen": "三维点云｜分割｜目标框定"
+  "music": [
+    { "t": 0.0, "cue": "无音乐，只有装置区低频环境声。" },
+    { "t": 5.0, "cue": "简洁电子节奏进入，建议每分钟 100 拍（每拍 15 帧，便于卡点）。" },
+    { "t": 15.0, "cue": "试点镜头节奏略提，配合三条信息落定。" },
+    { "t": 68.0, "cue": "带教段音乐降低约 4 dB，减少打击乐，让人物关系更近。" },
+    { "t": 84.0, "cue": "岗位段节奏稳定、少变化，保证阅读。" },
+    { "t": 116.5, "cue": "音乐自然收束。" },
+    { "t": 117.0, "cue": "最后 3 秒只保留轻微室内底噪，留出阅读与扫码时间。" }
+  ],
+  "shots": [
+    {
+      "id": "S01",
+      "section": "提问、公司与试点",
+      "start": 0,
+      "end": 5,
+      "purpose": "第一秒给出具体对象和问题：通用模型在工业现场会看错。",
+      "beats": [
+        { "t": [0, 3.0], "src": "I", "asset": "IMG_HERO", "scene": "still_reveal", "do": "主图压暗 1.5 EV；手电光斑从 (0.18, 0.40) 缓移到目标中心；画面以目标为中心由 1.00 缓推至 1.06。" },
+        { "t": [3.0, 5.0], "src": "G", "scene": "mark_target", "asset": "IMG_HERO", "do": "画面定格并提亮到 −0.8 EV；琥珀色虚线框落在压力表反光上，标为通用模型的误判；随后青色多边形沿真正的锈蚀边界描出（0.6 秒），顶点方块弹出。" }
+      ],
+      "text": [
+        { "t": [0.8, 4.8], "style": "h1", "zone": "top-left", "content": "AI，怎样看懂真实世界？" },
+        { "t": [3.1, 4.9], "style": "tag", "zone": "anchor:glare", "content": "通用模型：渗漏？" },
+        { "t": [3.5, 5.0], "style": "tag", "zone": "anchor:target", "content": "边界案例 017" },
+        { "t": [0, 4.8], "style": "notice", "zone": "bottom-left", "content": "本片部分画面由AI生成，仅作工作场景示意" }
+      ],
+      "vo": { "text": "AI，怎样看懂真实世界？", "tts": "A I，怎样看懂真实世界？", "t": [0.6, 3.2] },
+      "subtitle": false,
+      "audio": [
+        { "t": 0.0, "cue": "装置区低频环境声淡入" },
+        { "t": 0.3, "cue": "手电开关声" },
+        { "t": 3.1, "cue": "误判框出现时一声低沉提示" },
+        { "t": 3.5, "cue": "青色描线的细微电流声" }
+      ],
+      "transition_out": "zoom_into_ui：整幅画面连同两层框线缩入 S02 场景工作台的画布区。",
+      "vertical": "以目标为中心裁切；标题移到 top_y，提示语置底。"
+    },
+    {
+      "id": "S02",
+      "section": "提问、公司与试点",
+      "start": 5,
+      "end": 10,
+      "purpose": "看清问题：通用模型的输出与现场实际不一致。",
+      "beats": [
+        { "t": [0, 0.48], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "承接 S01：画面缩小进入场景工作台的画布，界面框架从四周淡入。" },
+        { "t": [0.48, 3.0], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "画布叠两层：琥珀色为通用模型输出（框在反光上、漏掉遮挡处），青色为现场复核；光标拖动第 3、第 5 个顶点修正边界；右侧面板显示类别“渗漏锈蚀”，属性“遮挡”“反光”未勾选。" },
+        { "t": [3.0, 5.0], "src": "A", "asset": "V02_EYE", "do": "眼部特写，屏幕光映在虹膜上。" }
+      ],
+      "text": [
+        { "t": [0.6, 2.9], "style": "label", "zone": "top-left", "content": "模型输出｜现场复核" }
+      ],
+      "vo": { "text": "通用模型，还看不准复杂的工业现场。", "t": [0.3, 4.4] },
+      "subtitle": true,
+      "audio": [
+        { "t": 0.2, "cue": "鼠标点击" },
+        { "t": 0.9, "cue": "拖动顶点的细小滴答声" },
+        { "t": 1.6, "cue": "拖动顶点的细小滴答声" }
+      ],
+      "transition_out": "硬切。",
+      "vertical": "工作台按竖版重排：画布在上，属性面板在下。"
+    },
+    {
+      "id": "S03",
+      "section": "提问、公司与试点",
+      "start": 10,
+      "end": 15,
+      "purpose": "前 15 秒内交代企业归属。",
+      "beats": [
+        { "t": [0, 2.8], "src": "A", "asset": "V03_OFFICE_PULLBACK", "do": "从显示器后方后拉，露出正在工作的团队。" },
+        { "t": [2.8, 5.0], "src": "G", "scene": "brand_card", "do": "定格上一帧，18px 高斯模糊并叠 72% 深蓝；公司名与短青线依次出现。有品牌墙实拍时改用实拍并保留同样文字层。" }
+      ],
+      "text": [
+        { "t": [3.0, 5.0], "style": "h2", "zone": "center", "content": "河南平煤神马智数科技有限公司" },
+        { "t": [3.3, 5.0], "style": "label", "zone": "center", "content": "2027届校园招聘" }
+      ],
+      "vo": { "text": "在智数科技，我们让AI模型走进能源现场。", "tts": "在智数科技，我们让A I模型走进能源现场。", "t": [0.3, 4.6] },
+      "subtitle": true,
+      "audio": [
+        { "t": 2.8, "cue": "柔和的低频落点，配合定格" }
+      ],
+      "transition_out": "硬切至 S04 试点信息。",
+      "vertical": "公司名分两行：河南平煤神马 / 智数科技有限公司。"
+    },
+    {
+      "id": "S04",
+      "section": "提问、公司与试点",
+      "start": 15,
+      "end": 22,
+      "purpose": "交代“为什么是这里”：平顶山入选国家数据标注先行先试工作城市，智数科技是试点任务的核心运营载体。",
+      "beats": [
+        { "t": [0, 2.6], "src": "G", "scene": "pilot_cities", "do": "深蓝底上 32 个抽象光点排成点阵（代表全国新增 32 个先行先试城市，不使用地图轮廓）；其中一点亮起青色并放大，标为平顶山市。" },
+        { "t": [2.6, 7.0], "src": "G", "scene": "pilot_facts", "do": "点阵收拢为九段环形图（九大试点领域），其中“智慧能源”一段以青色高亮；右侧按编号依次落下三条信息，版式沿用校招资料第 3 页的 1 / 2 / 3 结构。" }
+      ],
+      "text": [
+        { "t": [0.2, 7.0], "style": "label", "zone": "top-left", "content": "国家数据局 · 第二批数据标注先行先试（领域创新）工作城市" },
+        { "t": [0.6, 7.0], "style": "h2", "zone": "title", "content": "平顶山市入选" },
+        { "t": [0.9, 2.6], "style": "tag", "zone": "anchor:dot", "content": "全国新增 32 城之一" },
+        { "t": [2.8, 7.0], "style": "tag", "zone": "anchor:ring", "content": "智慧能源领域 · 唯一深耕煤炭化工赛道" },
+        { "t": [2.8, 7.0], "style": "body", "zone": "fact_1", "content": "全省唯一入选 · 全国能源化工领域唯一试点城市" },
+        { "t": [3.6, 7.0], "style": "body", "zone": "fact_2", "content": "集团：试点申报中坚力量" },
+        { "t": [4.4, 7.0], "style": "body", "zone": "fact_3", "content": "智数科技：试点任务核心运营载体" }
+      ],
+      "vo": { "text": "平顶山入选“国字号”数据标注试点，智数科技是核心运营载体。", "tts": "平顶山入选国字号数据标注试点，智数科技是核心运营载体。", "t": [0.3, 6.4] },
+      "subtitle": true,
+      "audio": [
+        { "t": 1.0, "cue": "光点亮起的清脆提示音" },
+        { "t": 2.8, "cue": "信息落定轻响 ×3（2.8 / 3.6 / 4.4 秒）" }
+      ],
+      "transition_out": "环形图中的青色一段延伸成线，带入 S05 三块界面之间的连接线。",
+      "vertical": "标题与点阵在上，三条信息纵向排列在下。",
+      "source": "按客户提供的试点介绍（references/试点介绍-客户提供.md）表述；入选主体为平顶山市。"
+    },
+    {
+      "id": "S05",
+      "section": "工作内容",
+      "start": 22,
+      "end": 28,
+      "purpose": "三类行业数据各给一个看得懂的动作：为模型备好数据。",
+      "beats": [
+        { "t": [0, 2.0], "src": "G", "scene": "modality_triptych", "asset": "IMG_HERO", "do": "图像：主图压力表局部，矩形框描出并标“压力表”，青色确认勾出现。" },
+        { "t": [2.0, 4.0], "src": "G", "scene": "modality_triptych", "do": "语音：程序生成波形，播放头扫过，转写“二号皮带机 托棍温度偏高”中的“托棍”被改为“托辊”，确认勾出现。" },
+        { "t": [4.0, 6.0], "src": "G", "scene": "modality_triptych", "do": "文本：巡检记录“2号皮带机托辊温度偏高，建议停机检查。”中的设备、异常、处置三类信息被抽取高亮；5.0 秒起三块画面缩为一排，以青色线相连。" }
+      ],
+      "text": [
+        { "t": [0.2, 6.0], "style": "label", "zone": "panel_1", "content": "图像" },
+        { "t": [2.2, 6.0], "style": "label", "zone": "panel_2", "content": "语音" },
+        { "t": [4.2, 6.0], "style": "label", "zone": "panel_3", "content": "文本" }
+      ],
+      "vo": {
+        "text": "教模型看准一个设备，听清一段语音，读懂一条记录。",
+        "t": [0.2, 5.6],
+        "phrases": [
+          { "text": "教模型看准一个设备，", "t": [0.2, 2.2] },
+          { "text": "听清一段语音，", "t": [2.4, 3.8] },
+          { "text": "读懂一条记录。", "t": [4.1, 5.6] }
+        ]
+      },
+      "subtitle": true,
+      "audio": [
+        { "t": 1.5, "cue": "确认音 1" },
+        { "t": 3.5, "cue": "确认音 2" },
+        { "t": 5.0, "cue": "确认音 3" }
+      ],
+      "transition_out": "硬切。",
+      "vertical": "三块画面纵向排列。"
+    },
+    {
+      "id": "S06",
+      "section": "工作内容",
+      "start": 28,
+      "end": 34,
+      "purpose": "把“认真”拍成遇到模糊边界时的具体做法。",
+      "beats": [
+        { "t": [0, 2.2], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "放大到目标：蒸汽区与表盘反光区各出现琥珀色虚线框和问号；光标点击“加入边界案例”，案例卡滑入右侧列表。" },
+        { "t": [2.2, 4.2], "src": "A", "asset": "V05_PAIR_DISCUSS", "do": "两位同事对照讨论并翻阅规范。" },
+        { "t": [4.2, 6.0], "src": "G", "scene": "boundary_compare", "asset": "IMG_HERO", "do": "目标局部上叠加两种判断：判断一（青色，含蒸汽遮挡区）与判断二（琥珀色，不含）；差异区域斜线填充；右侧滑入场景规范片段。" }
+      ],
+      "text": [
+        { "t": [0.3, 2.1], "style": "label", "zone": "top-left", "content": "边界案例｜规则对齐" },
+        { "t": [4.4, 6.0], "style": "tag", "zone": "anchor:polygon_a", "content": "判断一" },
+        { "t": [4.4, 6.0], "style": "tag", "zone": "anchor:polygon_b", "content": "判断二" },
+        { "t": [4.3, 6.0], "style": "body", "zone": "right-panel", "content": "规范 1.2 版：遮挡区域未定义" }
+      ],
+      "vo": { "text": "遇到模糊的边界，先对齐场景规则，再做出判断。", "t": [0.3, 5.6] },
+      "subtitle": true,
+      "audio": [
+        { "t": 1.4, "cue": "按钮点击，卡片滑入" },
+        { "t": 4.2, "cue": "两层叠加的轻微和声" }
+      ],
+      "transition_out": "形状匹配：差异区多边形移入 S07 规范页的案例缩略图。",
+      "vertical": "对比图在上，规范片段在下。"
+    },
+    {
+      "id": "S07",
+      "section": "工作内容",
+      "start": 34,
+      "end": 40,
+      "purpose": "一次判断变成可复用、可迁移的规范，并被批量执行。",
+      "beats": [
+        { "t": [0, 2.8], "src": "G", "scene": "spec_doc", "asset": "IMG_HERO", "do": "浅色规范页“场景应用规范 1.3 版”，新增条款 3.4 逐行显现；案例 017 缩略图落入页面，多边形与上一镜形状匹配。" },
+        { "t": [2.8, 4.4], "src": "G", "scene": "recheck_grid", "asset": "IMG_SAMPLES", "do": "12 张同类样本缩略图，青色扫描线逐行经过：9 张显示“符合 1.3 版”，3 张琥珀色“按 1.3 版修正”后转为通过。" },
+        { "t": [4.4, 6.0], "src": "G", "scene": "flow_nodes", "do": "三个节点“数据配套 → 模型验证 → 规范迭代”由青色线连接，回环箭头指回起点；下方出现复核标签。" }
+      ],
+      "text": [
+        { "t": [0.2, 2.8], "style": "body", "zone": "doc", "content": "3.4 遮挡与反光｜遮挡：按可见轮廓外推｜反光：不计入目标" },
+        { "t": [4.4, 6.0], "style": "label", "zone": "center", "content": "数据配套 → 模型验证 → 规范迭代" },
+        { "t": [4.5, 6.0], "style": "tag", "zone": "lower-third", "content": "案例 017 · 已复核" }
+      ],
+      "vo": { "text": "把一次判断，沉淀成可复用、可迁移的标准。", "t": [0.3, 5.0] },
+      "subtitle": true,
+      "audio": [
+        { "t": 1.6, "cue": "缩略图落入纸面的轻响" },
+        { "t": 4.0, "cue": "扫描线连续滴答" }
+      ],
+      "transition_out": "硬切。",
+      "vertical": "规范页全屏；样本网格改为 3 列 × 4 行。"
+    },
+    {
+      "id": "S08",
+      "section": "工作内容",
+      "start": 40,
+      "end": 46,
+      "purpose": "从二维进入三维，展示场景建模的工作对象。",
+      "beats": [
+        { "t": [0, 1.6], "src": "A", "asset": "V07_3D_OVER_SHOULDER", "optional": true, "do": "肩后看工程师操作点云（可选）。" },
+        { "t": [1.6, 2.8], "src": "G", "scene": "image_to_particles", "asset": "IMG_HERO", "do": "主图按像素采样为约 6 万个粒子，粒子获得深度并飞向程序点云的对应位置。" },
+        { "t": [2.8, 6.0], "src": "G", "scene": "pointcloud", "do": "围绕法兰环绕 20°；目标点在 3.0–3.6 秒变为琥珀色；3.6–4.2 秒描出青色三维框；左下角坐标轴；主体位于画面中右，避开标题区。" }
+      ],
+      "text": [
+        { "t": [1.8, 5.8], "style": "label", "zone": "top-left", "content": "三维点云｜场景分割｜目标框定" },
+        { "t": [4.2, 6.0], "style": "tag", "zone": "anchor:box3d", "content": "目标框定 · 渗漏锈蚀" }
+      ],
+      "vo": { "text": "从二维图像，到三维场景，还原工业现场的空间关系。", "t": [0.3, 5.4] },
+      "subtitle": true,
+      "audio": [
+        { "t": 1.6, "cue": "粒子散开的细碎声" },
+        { "t": 3.6, "cue": "三维框闭合轻响" }
+      ],
+      "transition_out": "连续镜头：S09 从同一点云视角开始后拉。",
+      "vertical": "点云居中，标题置顶，环绕角度不变。"
+    },
+    {
+      "id": "S09",
+      "section": "工作内容",
+      "start": 46,
+      "end": 51,
+      "purpose": "三维场景服务模型输入：目标在场景中有确定的位置。",
+      "beats": [
+        { "t": [0, 2.4], "src": "G", "scene": "pointcloud_scene", "do": "从法兰后拉：管廊支架、更多管道、储罐与楼梯按距离依次生长出来；目标三维框始终高亮。" },
+        { "t": [2.4, 5.0], "src": "G", "scene": "multi_view", "do": "画面分为主视、俯视、三维三个视图，同一目标在三处同时高亮，以青色引线相连。" }
+      ],
+      "text": [
+        { "t": [0.3, 2.3], "style": "label", "zone": "top-left", "content": "三维场景 → 模型输入（示意）" },
+        { "t": [2.6, 5.0], "style": "tag", "zone": "center", "content": "同一目标 · 三个视图" }
+      ],
+      "vo": { "text": "为模型搭建三维场景，让目标拥有准确的位置。", "t": [0.3, 4.7] },
+      "subtitle": true,
+      "audio": [
+        { "t": 2.4, "cue": "分屏切开的轻响" }
+      ],
+      "transition_out": "硬切。",
+      "vertical": "三个视图纵向排列。"
+    },
+    {
+      "id": "S10",
+      "section": "工作内容",
+      "start": 51,
+      "end": 57,
+      "purpose": "说明硕士岗位：用代码与实验找出模型在现场出错的原因。",
+      "beats": [
+        { "t": [0, 1.2], "src": "A", "asset": "V09_CODER_HANDS", "do": "敲键盘，点击鼠标。" },
+        { "t": [1.2, 4.4], "src": "G", "scene": "validate_terminal", "do": "深色编辑器显示 3 行示意代码并运行场景校验；结果表中多数场景以灰色显示通过，只有“蒸汽遮挡”一行以琥珀色突出：样本 023 漏检，待补充同类数据。" },
+        { "t": [4.4, 6.0], "src": "G", "scene": "scene_workbench", "asset": "IMG_SAMPLES", "do": "点击该行，画面推入场景工作台打开样本 023；按 1.3 版补勾“遮挡”属性，并加入下一版行业数据集。" }
+      ],
+      "text": [
+        { "t": [0.3, 5.8], "style": "label", "zone": "top-left", "content": "算法研发｜行业模型适配优化" },
+        { "t": [1.3, 2.4], "style": "code", "zone": "editor", "content": "# 按场景规范 1.3 版校验适配后模型\nresult = validate(model, scenes=[\"反光\", \"蒸汽遮挡\"])\nreport(result, only=\"待复核\")" },
+        { "t": [2.4, 4.4], "style": "body", "zone": "editor", "content": "样本 023 · 蒸汽遮挡漏检" }
+      ],
+      "vo": { "text": "再用代码与实验，找出模型在现场出错的原因。", "t": [0.3, 5.0] },
+      "subtitle": true,
+      "audio": [
+        { "t": 0.3, "cue": "键盘声" },
+        { "t": 1.0, "cue": "鼠标点击" },
+        { "t": 2.3, "cue": "程序运行的短促电子音" },
+        { "t": 4.4, "cue": "点击" }
+      ],
+      "transition_out": "硬切。",
+      "vertical": "编辑器字号放大，代码只保留注释与 1 行调用。"
+    },
+    {
+      "id": "S11",
+      "section": "工作内容",
+      "start": 57,
+      "end": 62,
+      "purpose": "说明研究工作：问题、假设、实验、复核。",
+      "beats": [
+        { "t": [0, 1.6], "src": "A", "asset": "V10_WHITEBOARD", "do": "两人在白板前讨论。" },
+        { "t": [1.6, 3.4], "src": "G", "scene": "whiteboard_flow", "do": "白板纹理上，深蓝马克笔逐笔画出四个方框与箭头，最后画回环箭头；“复核”加青色强调。" },
+        { "t": [3.4, 5.0], "src": "G", "scene": "experiment_log", "do": "实验记录卡片滑入，只写对照对象，不出现性能数字或曲线。" }
+      ],
+      "text": [
+        { "t": [0.1, 1.6], "style": "label", "zone": "top-left", "content": "研究问题｜实验验证" },
+        { "t": [1.7, 3.4], "style": "hand", "zone": "board", "content": "问题 → 假设 → 实验 → 复核" },
+        { "t": [3.5, 5.0], "style": "body", "zone": "card", "content": "对照实验：通用模型 / 适配后模型" }
+      ],
+      "vo": { "text": "从分析问题，到设计实验，让模型适配有据可依。", "t": [0.3, 4.7] },
+      "subtitle": true,
+      "audio": [
+        { "t": 1.6, "cue": "马克笔书写声" }
+      ],
+      "transition_out": "青色线擦除：回环箭头延伸成横线，带入 S12 的三联画面。",
+      "vertical": "白板流程改为竖向四步。"
+    },
+    {
+      "id": "S12",
+      "section": "工作内容",
+      "start": 62,
+      "end": 68,
+      "purpose": "通用模型、适配后模型与现场复核放在一起，回到现场形成闭环：完成 FDE 行业适配，模型真正可用。",
+      "beats": [
+        { "t": [0, 3.6], "src": "G", "scene": "layer_compare", "asset": "IMG_HERO", "do": "左中右三块：通用模型（框在反光上、漏掉遮挡处）、适配后模型（覆盖真实锈蚀边界）、现场复核（确认勾）；青色线从左向右穿过。" },
+        { "t": [3.6, 6.0], "src": "I", "asset": "IMG_HERO", "scene": "still_reveal", "do": "三块汇合为完整主图，正常曝光、暖色；多边形发光；由 1.06 缓拉至 1.00，与 S01 构图呼应。" }
+      ],
+      "text": [
+        { "t": [0.3, 3.5], "style": "tag", "zone": "panels", "content": "通用模型｜适配后模型｜现场复核" },
+        { "t": [3.6, 6.0], "style": "label", "zone": "top-left", "content": "FDE 行业适配 · 模型真正可用" },
+        { "t": [3.8, 6.0], "style": "notice", "zone": "bottom-left", "content": "场景验证示意" }
+      ],
+      "vo": { "text": "完成FDE行业适配，让模型在现场真正可用。", "tts": "完成F D E行业适配，让模型在现场真正可用。", "t": [0.3, 5.4] },
+      "subtitle": true,
+      "audio": [
+        { "t": 3.6, "cue": "开阔的和声铺底，标志段落结束" }
+      ],
+      "transition_out": "淡入暖色，接 S13。",
+      "vertical": "三块画面纵向排列，汇合后以目标为中心裁切。"
+    },
+    {
+      "id": "S13",
+      "section": "带教与积累",
+      "start": 68,
+      "end": 74,
+      "purpose": "本科生如何开始：项目组里有人带。",
+      "beats": [
+        { "t": [0, 3.6], "src": "A", "asset": "V12_MENTOR", "do": "资深同事坐在新同事旁讲解。" },
+        { "t": [3.6, 6.0], "src": "G", "scene": "paper_spec_insert", "do": "打印的场景规范页，高亮扫过条款 3.4；一张便签贴上，写着新同事的问题。" }
+      ],
+      "text": [
+        { "t": [0.6, 5.8], "style": "label", "zone": "top-left", "content": "本科｜项目组内跟随生产骨干上手" },
+        { "t": [4.4, 6.0], "style": "hand", "zone": "sticky", "content": "薄蒸汽也算遮挡吗？" }
+      ],
+      "vo": { "text": "刚加入项目组，有生产骨干带你读懂第一份规范。", "t": [0.3, 5.2] },
+      "subtitle": true,
+      "audio": [
+        { "t": 4.4, "cue": "便签贴上的纸张声" }
+      ],
+      "transition_out": "硬切。",
+      "vertical": "人物镜头取中央裁切，规范页全屏。"
+    },
+    {
+      "id": "S14",
+      "section": "带教与积累",
+      "start": 74,
+      "end": 79,
+      "purpose": "硕博如何开始：技术负责人带项目。",
+      "beats": [
+        { "t": [0, 2.4], "src": "A", "asset": "V13_TEAM_TABLE", "do": "三人围桌讨论，一人起身指向白板。" },
+        { "t": [2.4, 5.0], "src": "G", "scene": "task_board", "do": "问题卡“薄蒸汽遮挡下为何漏检”拆为三张任务卡，依次移入待办、进行中、验证三列，以青色线相连。" }
+      ],
+      "text": [
+        { "t": [0.4, 4.8], "style": "label", "zone": "top-left", "content": "硕博｜技术负责人带项目" },
+        { "t": [2.6, 5.0], "style": "body", "zone": "board", "content": "构造对照场景｜设计适配实验｜回到现场验证" }
+      ],
+      "vo": { "text": "做技术攻关，由技术负责人带项目，接受现场检验。", "t": [0.2, 4.8] },
+      "subtitle": true,
+      "audio": [
+        { "t": 2.8, "cue": "卡片移动的轻响 ×3" }
+      ],
+      "transition_out": "硬切。",
+      "vertical": "任务板三列改为三行。"
+    },
+    {
+      "id": "S15",
+      "section": "带教与积累",
+      "start": 79,
+      "end": 84,
+      "purpose": "用交付物表达完整 FDE 技术栈的积累，以及“看落地效果、看交付节点”的评价方式。",
+      "beats": [
+        { "t": [0, 3.4], "src": "G", "scene": "deliverables", "asset": "IMG_SAMPLES", "do": "顶部标题“完整FDE技术栈积累”；四张成果卡每隔 0.5 秒叠加出现并保持：行业数据集 1.3 版（样本缩略图）、三维场景文件（小点云）、场景校验脚本（代码片段）、场景应用规范 1.3 版 · 案例 017（文档页）。" },
+        { "t": [3.4, 5.0], "src": "G", "scene": "deliverables", "do": "四张卡飞入“项目归档”目录树，三条评价标签依次出现。" }
+      ],
+      "text": [
+        { "t": [0.1, 3.4], "style": "label", "zone": "top-left", "content": "完整FDE技术栈积累" },
+        { "t": [0.2, 3.4], "style": "tag", "zone": "card_1", "content": "行业数据集 1.3 版" },
+        { "t": [0.7, 3.4], "style": "tag", "zone": "card_2", "content": "三维场景文件" },
+        { "t": [1.2, 3.4], "style": "tag", "zone": "card_3", "content": "场景校验脚本" },
+        { "t": [1.7, 3.4], "style": "tag", "zone": "card_4", "content": "场景应用规范 1.3 版 · 案例 017" },
+        { "t": [3.5, 5.0], "style": "label", "zone": "center", "content": "落地效果｜交付节点｜可复用标准" }
+      ],
+      "vo": { "text": "看落地效果，看交付节点，沉淀可复用的标准。", "t": [0.3, 4.7] },
+      "subtitle": true,
+      "audio": [
+        { "t": 3.4, "cue": "归档的收拢声" }
+      ],
+      "transition_out": "四张卡变为 S16 的四宫格。",
+      "vertical": "成果卡纵向依次出现。"
+    },
+    {
+      "id": "S16",
+      "section": "招聘岗位",
+      "start": 84,
+      "end": 89,
+      "purpose": "给出招聘总数与学历结构。",
+      "beats": [
+        { "t": [0, 1.92], "src": "G", "scene": "role_grid", "do": "2×2 宫格复用前面画面：S05 多模态数据、S08 点云、S10 终端、S11 白板，各配岗位方向名。" },
+        { "t": [1.92, 5.0], "src": "G", "scene": "recruit_total", "do": "浅色卡片覆盖宫格；“58”在 2.0–3.2 秒由 0 计数到 58；3.3–3.8 秒出现学历拆分，其后静止。" }
+      ],
+      "text": [
+        { "t": [0.1, 1.9], "style": "tag", "zone": "grid", "content": "模型配套｜场景建模｜算法研发｜AI研究" },
+        { "t": [2.0, 5.0], "style": "label", "zone": "card", "content": "2027届校园招聘 · 计划招聘" },
+        { "t": [2.0, 5.0], "style": "stat", "zone": "card", "content": "58人" },
+        { "t": [3.3, 5.0], "style": "body", "zone": "card", "content": "本科 50｜硕士 5｜博士 3" }
+      ],
+      "vo": { "text": "2027届，智数科技，寻找五十八位“模型先锋”。", "tts": "二零二七届，智数科技，寻找五十八位模型先锋。", "t": [0.3, 4.7] },
+      "subtitle": true,
+      "audio": [
+        { "t": 2.0, "cue": "计数时的细密滴答，3.2 秒落定" }
+      ],
+      "transition_out": "浅色卡片左移收窄，成为 S17 的标题栏。",
+      "vertical": "数字居中放大，拆分改为三行。"
+    },
+    {
+      "id": "S17",
+      "section": "招聘岗位",
+      "start": 89,
+      "end": 96,
+      "purpose": "本科两个岗位，人数与方向一眼可读。",
+      "beats": [
+        { "t": [0, 0.8], "src": "G", "scene": "job_card_pair", "do": "顶部“本科 · 50 人”，下方两张岗位卡入场；每张卡上方为 50% 慢放、压暗的工作画面（S05、S08）。" },
+        { "t": [0.8, 7.0], "src": "G", "scene": "job_card_pair", "do": "文字静止 6.2 秒，仅背景画面缓动。" }
+      ],
+      "text": [
+        { "t": [0.2, 7.0], "style": "label", "zone": "header", "content": "本科 · 50 人" },
+        { "t": [0.4, 7.0], "style": "h2", "zone": "card_a", "content": "模型配套工程师｜20 人" },
+        { "t": [0.4, 7.0], "style": "body", "zone": "card_a", "content": "基础AI数据集方向：为行业模型构建结构化数据集" },
+        { "t": [0.6, 7.0], "style": "h2", "zone": "card_b", "content": "高端场景建模工程师｜30 人" },
+        { "t": [0.6, 7.0], "style": "body", "zone": "card_b", "content": "三维建模与点云处理，为行业模型构建场景素材" }
+      ],
+      "vo": { "text": "模型配套与场景建模，期待认真细致、愿意钻进现场的你。", "t": [0.4, 5.6] },
+      "subtitle": true,
+      "audio": [],
+      "transition_out": "版式保持，仅替换内容。",
+      "vertical": "两张卡上下排列。"
+    },
+    {
+      "id": "S18",
+      "section": "招聘岗位",
+      "start": 96,
+      "end": 102,
+      "purpose": "硕士岗位。",
+      "beats": [
+        { "t": [0, 0.8], "src": "G", "scene": "job_card", "do": "左侧 40% 深蓝面板入场，右侧 60% 为 S10 终端与 S11 白板画面交替。" },
+        { "t": [0.8, 6.0], "src": "G", "scene": "job_card", "do": "文字静止，背景画面缓动。" }
+      ],
+      "text": [
+        { "t": [0.2, 6.0], "style": "label", "zone": "panel", "content": "硕士" },
+        { "t": [0.3, 6.0], "style": "h2", "zone": "panel", "content": "算法研发工程师" },
+        { "t": [0.4, 6.0], "style": "count", "zone": "panel", "content": "5 人" },
+        { "t": [0.5, 6.0], "style": "body", "zone": "panel", "content": "行业模型适配优化方向" }
+      ],
+      "vo": { "text": "算法研发，期待你用实验与代码，让模型适配工业场景。", "t": [0.3, 5.6] },
+      "subtitle": true,
+      "audio": [],
+      "transition_out": "版式保持，仅替换内容。",
+      "vertical": "面板在下半屏，画面在上半屏。"
+    },
+    {
+      "id": "S19",
+      "section": "招聘岗位",
+      "start": 102,
+      "end": 108,
+      "purpose": "博士岗位。",
+      "beats": [
+        { "t": [0, 0.8], "src": "G", "scene": "job_card", "do": "沿用 S18 版式；右侧为 S14 讨论与 S09 多视图画面交替。" },
+        { "t": [0.8, 6.0], "src": "G", "scene": "job_card", "do": "文字静止，背景画面缓动。" }
+      ],
+      "text": [
+        { "t": [0.2, 6.0], "style": "label", "zone": "panel", "content": "博士" },
+        { "t": [0.3, 6.0], "style": "h2", "zone": "panel", "content": "人工智能研究员" },
+        { "t": [0.4, 6.0], "style": "count", "zone": "panel", "content": "3 人" },
+        { "t": [0.5, 6.0], "style": "body", "zone": "panel", "content": "机器视觉｜自然语言处理｜三维重建｜多模态" },
+        { "t": [0.6, 6.0], "style": "body", "zone": "panel", "content": "能源场景AI模型核心技术攻关 · FDE落地体系搭建" },
+        { "t": [0.8, 6.0], "style": "notice", "zone": "panel", "content": "研究方向以正式招聘简章为准" }
+      ],
+      "vo": { "text": "人工智能研究，期待你攻关能源场景模型的核心技术。", "t": [0.3, 5.6] },
+      "subtitle": true,
+      "audio": [],
+      "transition_out": "硬切。",
+      "vertical": "同 S18。"
+    },
+    {
+      "id": "S20",
+      "section": "回扣与投递入口",
+      "start": 108,
+      "end": 113,
+      "purpose": "标准被下一位同事复用，回到人。",
+      "beats": [
+        { "t": [0, 2.4], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "带“新同事”标签的光标打开“场景应用规范 1.3 版 › 案例 017”；主图与适配后模型的框线出现，构图与 S01 定格一致。" },
+        { "t": [2.4, 5.0], "src": "A", "asset": "V19_PROFILE", "do": "新同事侧脸，神情转为自信。" }
+      ],
+      "text": [
+        { "t": [0.3, 2.3], "style": "tag", "zone": "anchor:cursor", "content": "新同事" },
+        { "t": [2.4, 5.0], "style": "h1", "zone": "center-left", "content": "2027届，来做那个定义能源AI模型应用标准的人。" }
+      ],
+      "vo": { "text": "从做透一个现场开始，参与定义模型应用的标准。", "t": [0.2, 4.8] },
+      "subtitle": true,
+      "audio": [
+        { "t": 0.4, "cue": "鼠标点击" }
+      ],
+      "transition_out": "青色线从标题下方向右延伸，带入 S21。",
+      "vertical": "标题分三行：2027届，来做那个／定义能源AI模型／应用标准的人。"
+    },
+    {
+      "id": "S21",
+      "section": "回扣与投递入口",
+      "start": 113,
+      "end": 120,
+      "purpose": "品牌落版与投递入口，完整停留 7 秒。",
+      "beats": [
+        { "t": [0, 0.8], "src": "G", "scene": "end_card", "do": "深蓝底，青色线从左侧画到分隔位置；文字与二维码位依次入场。" },
+        { "t": [0.8, 7.0], "src": "G", "scene": "end_card", "do": "全部元素静止，只保留右下角极淡的粒子网络缓动。" }
+      ],
+      "text": [
+        { "t": [0.2, 7.0], "style": "h2", "zone": "left", "content": "河南平煤神马智数科技有限公司" },
+        { "t": [0.3, 7.0], "style": "label", "zone": "left", "content": "2027届校园招聘" },
+        { "t": [0.4, 7.0], "style": "h1", "zone": "left", "content": "让AI看懂真实世界" },
+        { "t": [0.5, 7.0], "style": "body", "zone": "right", "content": "[正式投递二维码，待补充]" },
+        { "t": [0.5, 7.0], "style": "body", "zone": "right", "content": "校招邮箱：以官方发布为准" },
+        { "t": [0.6, 7.0], "style": "notice", "zone": "bottom-left", "content": "总部：河南·平顶山｜部分岗位根据项目需要统筹调配｜部分画面由AI生成，仅作工作场景示意" }
+      ],
+      "vo": { "text": "加入智数科技。让AI看懂真实世界。", "tts": "加入智数科技。让A I看懂真实世界。", "t": [0.2, 3.6] },
+      "subtitle": false,
+      "audio": [
+        { "t": 0.0, "cue": "青色线描出的细微上扬音" }
+      ],
+      "transition_out": "结束，不淡出到黑。",
+      "vertical": "上：主题与公司名；中：二维码；下：地点与提示。"
+    }
+  ],
+  "versions": {
+    "master_16x9_120s": "全部 21 镜。",
+    "vertical_9x16_120s": "镜头与时间不变；代码场景按各镜 vertical 字段原生重排，AI 画面中央裁切或使用 9:16 版本。",
+    "cut_30s": {
+      "shots": "S01（5 秒）→ S04 试点（6 秒）→ S05（截 5 秒）→ S16（5 秒）→ 四岗位合并卡（5 秒，新代码场景 job_overview）→ S21（4 秒）",
+      "vo": [
+        "AI，怎样看懂真实世界？",
+        "平顶山入选“国字号”数据标注试点，智数科技是核心运营载体。",
+        "教模型看准一个设备，听清一段语音，读懂一条记录。",
+        "2027届，智数科技，寻找五十八位“模型先锋”。",
+        "模型配套、场景建模、算法研发、人工智能研究，等你加入。",
+        "加入智数科技。让AI看懂真实世界。"
+      ]
+    }
   },
-  {
-    "n": 8,
-    "start": 39,
-    "end": 45,
-    "visual": "刚才的点云与三维模型对齐，展开为能源设备或培训空间。选中的目标在不同视图中保持对应。",
-    "camera": "由屏幕中的局部对象进入三维场景；用目标连续性连接数据与场景。",
-    "vo": "让每一个目标，在数字世界里，拥有准确的位置。",
-    "screen": "三维数据与场景关系示意"
-  },
-  {
-    "n": 9,
-    "start": 45,
-    "end": 51,
-    "visual": "算法同事运行质检脚本，系统列出异常样本；界面突出“待复核”，点击后回到标注问题。",
-    "camera": "人物与脚本近景接异常样本界面；展示一次可理解的输入与反馈。",
-    "vo": "再用代码与算法，把质量检查做得更细。",
-    "screen": "算法研发｜数据质量优化"
-  },
-  {
-    "n": 10,
-    "start": 51,
-    "end": 57,
-    "visual": "研究人员在白板画出“问题—假设—实验—复核”；切实验记录和数据集版本对照。",
-    "camera": "白板中景切记录近景，保留人物讨论；不虚构性能数字和成功曲线。",
-    "vo": "从分析问题，到设计实验，寻找数据背后的规律。",
-    "screen": "研究问题｜实验验证"
-  },
-  {
-    "n": 11,
-    "start": 57,
-    "end": 63,
-    "visual": "沿用开头的同一设备场景，数据目标、模型输出和人工复核三层并列，随后回到真实现场画面。",
-    "camera": "三层画面由左至右连接，最后匹配切回开场对象，形成第一次闭环。",
-    "vo": "让数据、研究与场景，在一次次验证中连接起来。",
-    "screen": "AI应用场景示意；有真实可公开案例时替换为项目名称"
-  },
-  {
-    "n": 12,
-    "start": 63,
-    "end": 69,
-    "visual": "生产骨干坐在新同事旁边，用一条典型样本讲解规范；新同事完成一次复核并写下问题。",
-    "camera": "平视双人中景，接手指示例与笔记近景；动作自然，突出带教过程。",
-    "vo": "刚走进产业现场，有人带你读懂第一份规范。",
-    "screen": "本科：项目组内跟随生产骨干上手"
-  },
-  {
-    "n": 13,
-    "start": 69,
-    "end": 75,
-    "visual": "技术负责人和硕博同事围绕实验结果讨论，把一个研究问题分解为可执行任务，再回到屏幕验证。",
-    "camera": "三人讨论中景与任务板细节交替，保持相同问题贯穿。",
-    "vo": "走向技术攻关，也有项目，让研究接受实践的检验。",
-    "screen": "硕博：技术负责人带项目"
-  },
-  {
-    "n": 14,
-    "start": 75,
-    "end": 81,
-    "visual": "数据集版本、三维作品、质检脚本与规范文档依次归档；以员工实际成果替换示意素材。",
-    "camera": "四个成果细节切换，最后汇入一个简洁项目目录；用交付物表现积累。",
-    "vo": "把数据做准，把工具做实，让经验沉淀为新的能力。",
-    "screen": "数据集质量｜交付节点｜可复用标准"
-  },
-  {
-    "n": 15,
-    "start": 81,
-    "end": 87,
-    "visual": "回到四种工作的真实人物，四格画面合为统一版式；出现2027届与计划招聘人数。",
-    "camera": "人物视线或工作动作衔接到招聘总卡；人数是招聘计划，不画成现有团队规模。",
-    "vo": "2027届，智数科技，寻找五十八位新的同行者。",
-    "screen": "2027届校园招聘｜计划招聘58人；本科50｜硕士5｜博士3"
-  },
-  {
-    "n": 16,
-    "start": 87,
-    "end": 94,
-    "visual": "两张本科岗位卡与对应工作动作并排：图像标注、质检；点云分割、三维建模。背景动作降速。",
-    "camera": "岗位卡固定7秒，字号和人数优先；屏幕内只保留最关键的岗位信息。",
-    "vo": "数据标注、三维加工与建模，期待认真、细致的你。",
-    "screen": "本科：数据标注工程师20人；高端标注／3D建模工程师30人"
-  },
-  {
-    "n": 17,
-    "start": 94,
-    "end": 101,
-    "visual": "硕士岗位卡占据干净区域；另一侧显示质检代码、异常样本复核与实验记录。",
-    "camera": "固定双栏，背景轻微运动，保证完整岗位名称读得清。",
-    "vo": "算法研发，期待你用实验与代码，改进数据质量。",
-    "screen": "硕士：算法研发工程师5人；数据标注质量优化方向"
-  },
-  {
-    "n": 18,
-    "start": 101,
-    "end": 108,
-    "visual": "博士岗位卡与研究讨论、三维或多模态实验记录相结合；以任务为中心，不把招聘计划拍成现有团队事实。",
-    "camera": "沿用上一张岗位卡版式，避免观众重新寻找信息。",
-    "vo": "人工智能研究，期待你参与核心技术问题的攻关。",
-    "screen": "博士：人工智能研究员3人；研究方向详见正式招聘简章"
-  },
-  {
-    "n": 19,
-    "start": 108,
-    "end": 113,
-    "visual": "回到开头的边界样本。规范中新补充的案例被下一位同事打开使用；画面抬到员工面部。",
-    "camera": "样本与开头匹配，近景切人物；把“标准”落在一项可复用工作上。",
-    "vo": "从把一条数据做准开始，参与把标准做出来。",
-    "screen": "2027届，来做那个定标准的人。"
-  },
-  {
-    "n": 20,
-    "start": 113,
-    "end": 120,
-    "visual": "深蓝底、青绿色连接线形成简洁品牌落版。左侧公司名称与校招主题，右侧正式投递二维码或邮箱位置。",
-    "camera": "最终画面完整保持7秒，不再切城市或人物；旁白结束后留出阅读和扫码时间。",
-    "vo": "加入智数科技。让AI看懂真实世界。",
-    "screen": "河南平煤神马智数科技有限公司｜2027届校园招聘；总部：河南·平顶山；部分岗位按项目需要统筹调配；[正式投递二维码／邮箱，待补充]"
+  "copy_rules": {
+    "banned": [],
+    "avoid": ["数据标注", "标注"],
+    "allow_contexts": ["数据标注先行先试", "数据标注试点"],
+    "latin_allow": ["AI", "FDE"],
+    "note": "“数据标注”只用于国家试点的正式名称，不用来描述公司与岗位的工作；“标注”尽量不用。除 AI、FDE 外不用英文。代码样式的文字只作画面质感，不参与检查。"
   }
-]
+}
