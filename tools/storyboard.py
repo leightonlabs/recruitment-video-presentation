@@ -46,10 +46,15 @@ def vo_cps(shot):
 def copy_issues(text, rules):
     """按 copy_rules 检查旁白或屏幕文字：返回 (错误, 提醒)。"""
     errors = [f"出现禁用词“{w}”" for w in rules.get("banned", []) if w in text]
+    # 允许的固定说法（如试点正式名称）和已报错的禁用词不再重复提醒
     hidden = text
-    for w in rules.get("banned", []):
+    for w in rules.get("allow_contexts", []) + rules.get("banned", []):
         hidden = hidden.replace(w, "")
-    warnings = [f"出现应尽量避免的“{w}”" for w in rules.get("avoid", []) if w in hidden]
+    warnings = []
+    for w in rules.get("avoid", []):
+        if w in hidden:
+            warnings.append(f"出现应尽量避免的“{w}”")
+            hidden = hidden.replace(w, "")
     allow = set(rules.get("latin_allow", []))
     latin = sorted({w for w in re.findall(r"[A-Za-z]+", text) if w not in allow})
     if latin:
