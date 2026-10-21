@@ -233,7 +233,7 @@ def fmt_srt(sec):
 
 
 def split_subtitle(text):
-    """按标点切分，合并为不超过 SUB_MAX_CHARS 的行；去掉行尾逗号和句号。"""
+    """按标点切分，合并为不超过 SUB_MAX_CHARS 的行；句号、问号、叹号处必须断行，不跨句合并；去掉行尾逗号和句号。"""
     parts = [p for p in re.split(r"(?<=[，。？！；])", text) if p]
     lines, cur = [], ""
     for p in parts:
@@ -242,6 +242,9 @@ def split_subtitle(text):
             cur = p
         else:
             cur += p
+        if cur.endswith(("。", "？", "！")):
+            lines.append(cur)
+            cur = ""
     if cur:
         lines.append(cur)
     return [re.sub(r"[，。；]$", "", line) for line in lines]

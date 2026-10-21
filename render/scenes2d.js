@@ -73,6 +73,15 @@ export function makeScenes2D(env, S3) {
     const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.95); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)');
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
     if (P.noCard) return;
+    // 去掉审阅信息时（clean）只保留“视频占位”与画面内容说明，不显示资产编号、时长、运镜与进度条
+    if (env.clean) {
+      const x = 440, y = 660, w = 1040, h = 180;
+      panel(ctx, x, y, w, h, { fill: 'rgba(6,32,69,.72)', r: 16 });
+      dashRect(ctx, x, y, w, h, { color: rgba(C.edge, 0.7), width: 2, dash: [10, 8] });
+      text(ctx, '视频占位', x + 40, y + 56, { font: '700 26px NS', color: C.teal });
+      wrap(ctx, P.beat.do || '', x + 40, y + 112, w - 80, 42, { font: '400 30px NS', color: '#fff', maxLines: 2 });
+      return;
+    }
     const x = 440, y = 640, w = 1040, h = 230;
     panel(ctx, x, y, w, h, { fill: 'rgba(6,32,69,.72)', r: 16 });
     dashRect(ctx, x, y, w, h, { color: rgba(C.edge, 0.7), width: 2, dash: [10, 8] });

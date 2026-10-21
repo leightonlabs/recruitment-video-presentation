@@ -5,7 +5,8 @@
 ## 一键生成
 
 ```bash
-./render/build.sh        # 默认 4 个进程并行
+./render/build.sh                 # 粗剪，默认 4 个进程并行
+CLEAN=1 ./render/build.sh         # 精修版：去掉审阅与测试信息，只输出高码率 1080p
 ```
 
 依赖：Node.js 22、Playwright 自带的 Chromium、FFmpeg、Python 3 与 numpy。首次运行会安装 three.js，并从 Google Fonts 下载 Noto Sans SC、JetBrains Mono、Long Cang（均为 SIL OFL 1.1）。
@@ -16,6 +17,7 @@
 |---|---|
 | `build/粗剪-v4-150秒.mp4` | 1920×1080、25 帧/秒，带临时音轨与字幕 |
 | `build/粗剪-v4-150秒-720p.mp4` | 1280×720 预览版，便于转发 |
+| `build/精修版-150秒-1080p.mp4` | `CLEAN=1` 时输出：1920×1080、CRF 16；无审阅信息条，视频占位卡只保留“视频占位”与画面内容说明（不显示资产编号、时长、运镜与进度条），音轨为配乐与音效（不含旁白提示音） |
 | `build/assets/hero.png`、`hero_anchors.json` | 占位主图及目标多边形、反光框、蒸汽区坐标 |
 | `build/roughcut/` | 中间文件：无声画面、配乐、音效、旁白提示音、字幕 |
 
@@ -53,7 +55,9 @@ THEME=vibrant CLEAN=1 node render/render.mjs sample "15-24,143-150" build/样片
 | 配乐与音效 | 按 `music` 与 `audio` 字段合成的临时声音 | 授权配乐与音效 |
 | 投递二维码 | 虚线占位框 | 公司提供的二维码 |
 
-右上角的审阅信息条显示粗剪版本、镜号、时间码和当前画面的制作路线，便于按时间点提修改意见；正式版去掉。
+右上角的审阅信息条显示粗剪版本、镜号、时间码和当前画面的制作路线，便于按时间点提修改意见；`CLEAN=1` 时去掉。
+
+字幕由 `tools/storyboard.py srt` 按标点切分：每行不超过 16 字，句号、问号、叹号处必须断行，不跨句合并，行尾不留逗号和句号。
 
 ## 文件
 
