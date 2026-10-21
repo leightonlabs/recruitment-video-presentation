@@ -2,27 +2,26 @@
 //
 // 两套主题：
 //   classic  —— 原粗剪的深蓝纯色风格；
-//   vibrant  —— 动感科技蓝：深蓝底上的极光光团、斜向扫光、流动透视网格、上下边带流光与景深粒子；
-//               前景用不透明的深宝蓝卡片、白色与蓝灰文字、香槟金点睛、实心蓝色标签，不用荧光色与线框。
+//   vibrant  —— 动感科技蓝：极光流动背景、透视数据网格、光流与粒子，玻璃面板，连接线带流动光脉冲。
+//               强调色为柔和的天青（不用高饱和荧光青，发光减弱），只用于线条、图标与文字；面板与卡片的边框一律用中性白。
 const THEMES = {
   classic: {
     navy900: '#062045', navy800: '#0F2B46', navy700: '#123E54',
-    teal: '#2DD4BF', teal5: '#2DB4AA', amber: '#F59E0B', amber7: '#B45309',
+    teal: '#2DD4BF', teal5: '#2DB4AA', amber: '#F59E0B', amber7: '#B45309', edge: '#2DD4BF',
     paper: '#F8FAFC', ink: '#0F2B46', muted: '#7B8B9A', mutedDark: '#ACB6C0', white: '#FFFFFF',
-    hi: '#2DD4BF', hiFill: '#2DB4AA', onLight: '#2DB4AA',
+    sky: '#4CC3FF', electric: '#1E6BFF', violet: '#6A5CFF',
     ui0: '#081423', ui1: '#0c1c30', tile: 'rgba(15,43,70,.86)', slotOff: 'rgba(15,43,70,.45)', dot: '#5d7f99',
-    column: 'rgba(255,255,255,.035)', card2: '#163a59', term: '#0b1220', side: '#0F2B46', cloud: '#3b82a0', cloudFar: '#2a6f8f',
+    card2: '#163a59', term: '#0b1220', side: '#0F2B46', cloud: '#3b82a0', cloudFar: '#2a6f8f',
   },
   vibrant: {
-    // teal 在本主题中即“主线条色”（柔白）；hi 为点睛色（香槟金）；onLight 为纸面上的强调色；amber 仍用于画面中的目标高亮
-    navy900: '#020A2A', navy800: '#0E2163', navy700: '#0E3A9E',
-    teal: '#E6ECFF', teal5: '#E6ECFF', amber: '#FFB020', amber7: '#D98E04',
-    paper: '#F8FAFC', ink: '#0B1B4D', muted: '#6B7FA8', mutedDark: '#9FB0D6', white: '#FFFFFF',
-    hi: '#E6C27A', hiFill: '#E6C27A', onLight: '#1E4FD8',
-    sky: '#4CC3FF', electric: '#1E6BFF', violet: '#6A5CFF', streak: '#35E6E0',
+    navy900: '#020A2A', navy800: '#0A2463', navy700: '#0E3A9E',
+    teal: '#6CCFF0', teal5: '#2A9FD0', amber: '#FFB020', amber7: '#E07A00', edge: '#FFFFFF', streak: '#35E6E0',
+    paper: '#F8FAFC', ink: '#0B1B4D', muted: '#6B7FA8', mutedDark: '#A9C4F0', white: '#FFFFFF',
+    sky: '#4CC3FF', electric: '#1E6BFF', violet: '#6A5CFF',
     bgTop: '#03104A', bgMid: '#062585', bgBottom: '#020B33',
-    ui0: '#061545', ui1: '#0C1D58', tile: '#0E2163', slotOff: '#0A1A52', dot: '#8EA6E0', column: '#0E2163',
-    card2: '#16307E', term: '#050E33', side: '#0A1A52', cloud: '#C8D6FF', cloudFar: '#5B7FE0',
+    ui0: '#04123F', ui1: '#0A1F66', tile: 'rgba(14,50,160,.5)', slotOff: 'rgba(14,50,160,.22)', dot: '#7FB4FF',
+    card2: 'rgba(30,107,255,.3)', term: 'rgba(3,10,40,.92)', side: 'rgba(6,26,96,.8)', cloud: '#8FD9FF', cloudFar: '#3D7BFF',
+    glass: 'rgba(20,70,190,.30)',
   },
 };
 export const C = { ...THEMES.classic };
@@ -55,25 +54,20 @@ export function rr(ctx, x, y, w, h, r) {
   ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
-// 面板：动感主题下，默认深色面板（fill 为 navy800）为不透明深宝蓝卡片：上浅下深的微渐变、上亮下暗的细边、顶部高光线与柔和投影
-export function panel(ctx, x, y, w, h, { fill = C.navy800, stroke = null, r = 14, alpha = 1, shadow = false } = {}) {
-  const isCard = THEME.vibrant && fill === C.navy800;
+// 面板：动感主题下，默认深色面板（fill 为 navy800）自动改为玻璃质感，描边为中性白渐变
+export function panel(ctx, x, y, w, h, { fill = C.navy800, stroke = null, r = 14, alpha = 1, shadow = false, glass = null } = {}) {
+  const isGlass = THEME.vibrant && (glass ?? fill === C.navy800);
   ctx.save(); ctx.globalAlpha *= alpha;
-  if (shadow || isCard) { ctx.shadowColor = isCard ? 'rgba(0,4,30,.55)' : 'rgba(0,0,0,.35)'; ctx.shadowBlur = isCard ? 40 : 30; ctx.shadowOffsetY = isCard ? 16 : 10; }
-  rr(ctx, x, y, w, h, r);
-  if (isCard) { const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, '#152B78'); g.addColorStop(1, '#0B1A4F'); ctx.fillStyle = g; }
-  else ctx.fillStyle = fill;
-  ctx.fill();
+  if (shadow || isGlass) { ctx.shadowColor = isGlass ? 'rgba(0,16,70,.55)' : 'rgba(0,0,0,.35)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10; }
+  rr(ctx, x, y, w, h, r); ctx.fillStyle = isGlass ? C.glass : fill; ctx.fill();
   ctx.shadowColor = 'transparent';
-  if (isCard) {
-    const edge = ctx.createLinearGradient(0, y, 0, y + h);
-    edge.addColorStop(0, 'rgba(170,195,255,.38)'); edge.addColorStop(1, 'rgba(170,195,255,.06)');
-    ctx.strokeStyle = edge; ctx.lineWidth = 1.25; ctx.stroke();
-    ctx.save(); ctx.clip();
-    const hl = ctx.createLinearGradient(x, 0, x + w, 0);
-    hl.addColorStop(0, 'rgba(255,255,255,0)'); hl.addColorStop(0.5, 'rgba(255,255,255,.24)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = hl; ctx.fillRect(x, y, w, 1.5);
-    ctx.restore();
+  if (isGlass) {
+    const sheen = ctx.createLinearGradient(x, y, x, y + h);
+    sheen.addColorStop(0, 'rgba(255,255,255,.10)'); sheen.addColorStop(0.35, 'rgba(255,255,255,.02)'); sheen.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sheen; ctx.fill();
+    const edge = ctx.createLinearGradient(x, y, x + w, y + h);
+    edge.addColorStop(0, 'rgba(255,255,255,.38)'); edge.addColorStop(0.5, 'rgba(255,255,255,.06)'); edge.addColorStop(1, 'rgba(255,255,255,.2)');
+    ctx.strokeStyle = edge; ctx.lineWidth = 1.5; ctx.stroke();
   }
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
   ctx.restore();
@@ -90,30 +84,27 @@ export function polyLength(pts, close = true) {
   for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; L += Math.hypot(b[0] - a[0], b[1] - a[1]); }
   return L;
 }
-// 沿折线描出前 k（0–1）部分，带外发光：用于青色连接线。
-// 动感主题下不用彩色光晕：主线条为半透明柔白，描线时线头更亮，描完后有一段白色光点沿线流动
+// 沿折线描出前 k（0–1）部分，带外发光：用于青色连接线。动感主题下，描完的线上有一段光脉冲持续流动
 export function drawLine(ctx, pts, k, { color = C.teal, width = 4, glow = 10, close = false, dash = null, alpha = 1, flow = true } = {}) {
   if (k <= 0) return;
-  const L = polyLength(pts, close), V = THEME.vibrant, lit = V && flow && !dash && glow && L > 60;
+  const L = polyLength(pts, close);
   ctx.save(); ctx.globalAlpha *= alpha;
   ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = color;
-  if (glow && !V) { ctx.shadowColor = rgba(color, 0.8); ctx.shadowBlur = glow; }
+  if (glow) { ctx.shadowColor = rgba(color, THEME.vibrant ? 0.5 : 0.8); ctx.shadowBlur = THEME.vibrant ? glow * 0.7 : glow; }
   ctx.setLineDash(dash ? dash : [L * clamp(k), L + 10]);
-  if (lit) { ctx.save(); ctx.globalAlpha *= 0.6; polyPath(ctx, pts, close); ctx.stroke(); ctx.restore(); }
-  else { polyPath(ctx, pts, close); ctx.stroke(); }
-  if (lit) {
-    const len = Math.min(160, L * 0.35);
-    let pos;
-    if (k < 1) pos = L * k;
-    else { const off = (pts[0][0] * 7 + pts[0][1] * 13) % 997; pos = (NOW * 520 + off) % (L + len); }
+  polyPath(ctx, pts, close); ctx.stroke();
+  if (THEME.vibrant && flow && !dash && k >= 1 && glow && L > 60) {
+    const len = Math.min(160, L * 0.35), speed = 520, off = (pts[0][0] * 7 + pts[0][1] * 13) % 997;
+    const pos = (NOW * speed + off) % (L + len);
     ctx.setLineDash([len, L + len]); ctx.lineDashOffset = -(pos - len);
-    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = width + 1; ctx.shadowColor = 'rgba(255,255,255,.7)'; ctx.shadowBlur = 8;
+    ctx.strokeStyle = 'rgba(240,250,255,.95)'; ctx.lineWidth = width + 1; ctx.shadowColor = rgba(color, 0.7); ctx.shadowBlur = 12;
     polyPath(ctx, pts, close); ctx.stroke();
   }
   ctx.restore();
 }
 export function nodes(ctx, pts, size = 10, color = C.teal, alpha = 1) {
   ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = color;
+  if (THEME.vibrant) { ctx.shadowColor = rgba(color, 0.6); ctx.shadowBlur = 6 + 3 * Math.sin(NOW * 4); }
   pts.forEach(p => ctx.fillRect(p[0] - size / 2, p[1] - size / 2, size, size));
   ctx.restore();
 }
@@ -149,7 +140,7 @@ export function cursor(ctx, x, y, { color = '#fff', alpha = 1, press = 0 } = {})
   ctx.restore();
 }
 export function checkbox(ctx, x, y, label, on, { color = C.white } = {}) {
-  ctx.save(); ctx.strokeStyle = on ? C.teal : C.mutedDark; ctx.lineWidth = 2; ctx.strokeRect(x, y - 18, 22, 22);
+  ctx.save(); ctx.strokeStyle = on ? C.edge : C.mutedDark; ctx.lineWidth = 2; ctx.strokeRect(x, y - 18, 22, 22);
   if (on) { ctx.fillStyle = C.teal; ctx.fillRect(x + 4, y - 14, 14, 14); }
   ctx.restore();
   text(ctx, label, x + 36, y, { font: '400 24px NS', color });

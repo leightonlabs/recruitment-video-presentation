@@ -66,7 +66,7 @@ export async function makeScenes3D(env) {
   const exCloud = new THREE.Points(exGeo, new THREE.PointsMaterial({ size: 0.03, color: new THREE.Color(C.cloudFar), transparent: true, opacity: 0.8 }));
   exCloud.frustumCulled = false; scene.add(exCloud);
 
-  const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(0.5, 0.62, 0.36)), new THREE.LineBasicMaterial({ color: C.teal }));
+  const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(0.5, 0.62, 0.36)), new THREE.LineBasicMaterial({ color: C.edge }));
   box.position.set(G.stain[0], G.stain[1], G.stain[2]); scene.add(box);
   const axes = new THREE.AxesHelper(0.7); axes.position.set(-3.1, -1.25, 0.2);
   axes.setColors(new THREE.Color(C.amber), new THREE.Color(C.teal), new THREE.Color(0xffffff)); scene.add(axes);
@@ -157,7 +157,7 @@ export async function makeScenes3D(env) {
       bgNavy(ctx, { dots: false });
       const k = easeOut(seg(P.tb, 0, 0.5));
       const targets = multiFrame(P.tb);
-      // 动感主题：三个视窗垫不透明深蓝卡片，不用透明线框
+      // 动感主题：三个视窗垫玻璃面板（中性白描边），不用强调色线框
       if (THEME.vibrant) VP.forEach(v => panel(ctx, v[0], v[1], v[2], v[3], { r: 8, alpha: k }));
       ctx.save(); ctx.globalAlpha = k; ctx.drawImage(canvas, 0, 0); ctx.restore();
       ['主视', '俯视', '三维'].forEach((name, i) => {
