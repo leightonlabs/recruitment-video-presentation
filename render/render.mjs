@@ -4,6 +4,9 @@
 //   node render/render.mjs hero                          渲染占位主图与坐标 → build/assets/
 //   node render/render.mjs stills <秒,秒,...> <输出目录>    渲染指定时刻的审阅静帧
 //   node render/render.mjs video [并行数]                 渲染全片画面 → build/roughcut/video.mp4
+//   node render/render.mjs sample <起-止,起-止,...> <输出.mp4>  渲染若干时间段并拼接成样片（附临时音轨）
+//
+// 环境变量：THEME=vibrant（默认，动感科技蓝）| classic（原深蓝纯色）；CLEAN=1 去掉审阅信息条
 import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile, rm } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
@@ -29,6 +32,7 @@ function serve() {
   return new Promise(ok => server.listen(0, '127.0.0.1', () => ok(server)));
 }
 
+const QUERY = `?${new URLSearchParams({ theme: process.env.THEME || 'vibrant', ...(process.env.CLEAN ? { clean: '1' } : {}) })}`;
 const ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-gpu-sandbox'];
 
 async function openPage(browser, url) {
@@ -52,7 +56,7 @@ async function hero(base) {
 
 async function stills(base, times, outDir) {
   const browser = await chromium.launch({ args: ARGS });
-  const page = await openPage(browser, `${base}/render/film.html`);
+  const page = await openPage(browser, `${base}/render/film.html${QUERY}`);
   await mkdir(outDir, { recursive: true });
   for (const t of times) {
     const f = Math.min(TOTAL - 1, Math.round(t * FPS));
@@ -65,7 +69,7 @@ async function stills(base, times, outDir) {
 
 async function renderRange(base, from, to, out, tag) {
   const browser = await chromium.launch({ args: ARGS });
-  const page = await openPage(browser, `${base}/render/film.html`);
+  const page = await openPage(browser, `${base}/render/film.html${QUERY}`);
   const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
     '-c:v', 'libx264', '-preset', 'fast', '-crf', '14', '-pix_fmt', 'yuv420p', '-r', String(FPS), out]);
   const t0 = Date.now();
@@ -100,6 +104,25 @@ async function video(base, workers) {
   console.log(`画面 → build/roughcut/video.mp4（${TOTAL} 帧）`);
 }
 
+const run = args => new Promise((ok, fail) => spawn('ffmpeg', ['-y', '-loglevel', 'error', ...args], { cwd: ROOT }).on('close', c => (c ? fail(new Error('FFmpeg 失败')) : ok())));
+
+async function sample(base, spec, outFile) {
+  const dir = join(ROOT, 'build/sample');
+  await mkdir(dir, { recursive: true });
+  const ranges = spec.split(',').map(r => r.split('-').map(Number));
+  const parts = ranges.map(([a, b], i) => ({ a, b, from: Math.round(a * FPS), to: Math.round(b * FPS), out: join(dir, `seg${i}.mp4`), tag: `片段${i + 1}` }));
+  await Promise.all(parts.map(p => renderRange(base, p.from, p.to, p.out, p.tag)));
+  // 每段先把时间戳挪回原片位置再烧字幕，然后归零；音轨按同样的时间段截取，段间各做 40–80ms 淡入淡出防爆音
+  const subs = 'build/roughcut/subs.ass';
+  const filt = parts.map((p, i) =>
+    `[${i + 1}:v]setpts=PTS+${p.a}/TB,ass=${subs}:fontsdir=build/fonts,setpts=PTS-STARTPTS[v${i}];`
+    + `[0:a]atrim=${p.a}:${p.b},asetpts=PTS-STARTPTS,afade=t=in:d=0.04,afade=t=out:st=${(p.b - p.a - 0.08).toFixed(2)}:d=0.08[a${i}]`).join(';')
+    + ';' + parts.map((_, i) => `[v${i}][a${i}]`).join('') + `concat=n=${parts.length}:v=1:a=1[vout][aout]`;
+  await run(['-i', join(ROOT, 'build/roughcut/audio.wav'), ...parts.flatMap(p => ['-i', p.out]), '-filter_complex', filt, '-map', '[vout]', '-map', '[aout]',
+    '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '256k', '-movflags', '+faststart', resolve(outFile)]);
+  console.log(`样片 → ${outFile}`);
+}
+
 const [mode, a, b] = process.argv.slice(2);
 const server = await serve();
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -107,7 +130,8 @@ try {
   if (mode === 'hero') await hero(base);
   else if (mode === 'stills') await stills(base, a.split(',').map(Number), resolve(b));
   else if (mode === 'video') await video(base, Number(a) || 4);
-  else console.log('用法：node render/render.mjs hero | stills <秒,...> <目录> | video [并行数]');
+  else if (mode === 'sample') await sample(base, a, b);
+  else console.log('用法：node render/render.mjs hero | stills <秒,...> <目录> | video [并行数] | sample <起-止,...> <输出.mp4>');
 } finally {
   server.close();
 }

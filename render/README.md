@@ -19,10 +19,27 @@
 | `build/assets/hero.png`、`hero_anchors.json` | 占位主图及目标多边形、反光框、蒸汽区坐标 |
 | `build/roughcut/` | 中间文件：无声画面、配乐、音效、旁白提示音、字幕 |
 
-单独渲染审阅静帧：
+单独渲染审阅静帧或样片：
 
 ```bash
 node render/render.mjs stills 2.4,30,61 build/review   # 参数为全片秒数
+node render/render.mjs sample "15-24,104-110" build/样片.mp4   # 截取若干时间段拼成样片，带音轨与字幕（需先跑过一键生成）
+```
+
+## 画面风格
+
+环境变量 `THEME` 切换两套风格，`CLEAN=1` 去掉审阅信息条：
+
+| 取值 | 风格 | 背景 | 其他元素 |
+|---|---|---|---|
+| `vibrant`（默认） | 动感科技蓝：宝蓝到深靛渐变 | 缓慢漂移的极光光斑、每 7 秒一次的斜向扫光、向远处流动的透视网格、上下边带的流光线、带景深视差的发光粒子 | 玻璃质感面板与渐变描边，连线上有流动光点，节点呼吸发光，数字为白到青渐变，青色与琥珀色更亮 |
+| `classic` | 原深蓝纯色 | 纯色加点阵 | 实色面板 |
+
+背景动画按全片时间计算，跨镜头连续不跳变；有文字的画面，流光线只出现在上下边带，不从文字后面穿过。点云、主图等内容较多的画面，背景自动减弱（光斑减半、无网格、流光线减少）。
+
+```bash
+THEME=classic ./render/build.sh                 # 按原风格出全片
+THEME=vibrant CLEAN=1 node render/render.mjs sample "15-24,143-150" build/样片.mp4
 ```
 
 ## 粗剪里的占位
@@ -45,7 +62,7 @@ node render/render.mjs stills 2.4,30,61 build/review   # 参数为全片秒数
 | `film.html`、`film.js` | 时间轴、文字层（读取各镜 `text` 字段排版）与审阅信息条 |
 | `scenes2d.js` | 二维场景：AI 占位卡、主图动画、场景工作台、信息图、岗位卡、片尾 |
 | `scenes3d.js` | 三维场景：主图粒子化、点云、点云场景生长、三视图 |
-| `draw.js` | 颜色、缓动、描线、文字等通用绘图工具 |
+| `draw.js` | 两套主题色、动态背景、缓动、描线、面板、文字等通用绘图工具 |
 | `geometry.js` | 占位主图与点云共用的几何参数 |
 | `hero.html` | 占位主图渲染页 |
 | `render.mjs` | 无头 Chromium 逐帧截图与并行编码 |

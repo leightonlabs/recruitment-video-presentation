@@ -14,7 +14,7 @@ export async function makeScenes3D(env) {
 
   // ---------- 设备点云（与占位主图同一几何） ----------
   const N = 200000, R = rng(11);
-  const base = new THREE.Color(0x3b82a0), hit = new THREE.Color(C.amber);
+  const base = new THREE.Color(C.cloud), hit = new THREE.Color(C.amber);
   const pts = new Float32Array(N * 3), isTarget = new Uint8Array(N);
   const cyl = (cx, cy, cz, r, axis, a0, a1) => { const a = R() * Math.PI * 2, h = lerp(a0, a1, R());
     return axis === 'x' ? [cx + h, cy + Math.cos(a) * r, cz + Math.sin(a) * r] : [cx + Math.cos(a) * r, cy + h, cz + Math.sin(a) * r]; };
@@ -63,7 +63,7 @@ export async function makeScenes3D(env) {
   const NE = EX.length, exPos = new Float32Array(NE * 3), exHome = new Float32Array(NE * 3), exDist = new Float32Array(NE);
   EX.forEach((p, i) => { exHome.set(p, i * 3); exDist[i] = Math.hypot(p[0], p[1] + 0.3, p[2]); });
   const exGeo = new THREE.BufferGeometry(); exGeo.setAttribute('position', new THREE.BufferAttribute(exPos, 3));
-  const exCloud = new THREE.Points(exGeo, new THREE.PointsMaterial({ size: 0.03, color: 0x2a6f8f, transparent: true, opacity: 0.8 }));
+  const exCloud = new THREE.Points(exGeo, new THREE.PointsMaterial({ size: 0.03, color: new THREE.Color(C.cloudFar), transparent: true, opacity: 0.8 }));
   exCloud.frustumCulled = false; scene.add(exCloud);
 
   const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(0.5, 0.62, 0.36)), new THREE.LineBasicMaterial({ color: C.teal }));

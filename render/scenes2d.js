@@ -2,7 +2,7 @@
 // P = { shot, beat, bi, t（镜头内秒）, tb（拍内秒）, bd（拍长）, sd（镜头长） }。
 import {
   C, clamp, lerp, seg, easeOut, easeInOut, rgba, rng, rr, panel, polyPath, drawLine, nodes, dashRect, text, wrap,
-  check, cursor, checkbox, hatch, bgNavy, placeImage, imageInRect, centroid, bbox,
+  check, cursor, checkbox, hatch, bgNavy, placeImage, imageInRect, centroid, bbox, THEME,
 } from './draw.js';
 
 export function makeScenes2D(env, S3) {
@@ -138,12 +138,12 @@ export function makeScenes2D(env, S3) {
   const CR = { x: 100, y: 100, w: 1280, h: 720, r: 8 };
   function chrome(ctx, alpha, title, { checks = [false, false], layers = true, list = null, button = null, badge = null } = {}) {
     ctx.save(); ctx.globalAlpha = alpha;
-    ctx.fillStyle = '#081423'; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#0c1c30'; ctx.fillRect(0, 0, W, 64); ctx.fillRect(0, 64, 72, H);
+    ctx.fillStyle = C.ui0; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = C.ui1; ctx.fillRect(0, 0, W, 64); ctx.fillRect(0, 64, 72, H);
     text(ctx, '场景工作台', 100, 42, { font: '700 24px NS', color: C.teal });
     text(ctx, title, 260, 42, { font: '400 24px NS', color: '#fff' });
     for (let i = 0; i < 6; i++) { rr(ctx, 18, 100 + i * 64, 36, 36, 8); ctx.strokeStyle = i === 1 ? C.teal : 'rgba(255,255,255,.25)'; ctx.lineWidth = 2; ctx.stroke(); }
-    panel(ctx, 1420, 100, 460, 900, { fill: '#0c1c30', r: 12 });
+    panel(ctx, 1420, 100, 460, 900, { fill: C.ui1, r: 12 });
     text(ctx, '类别', 1450, 150, { font: '400 22px NS', color: C.mutedDark });
     panel(ctx, 1450, 166, 150, 44, { fill: rgba(C.teal, 0.18), r: 22 }); text(ctx, '渗漏锈蚀', 1475, 196, { font: '700 22px NS', color: C.teal });
     text(ctx, '属性', 1450, 260, { font: '400 22px NS', color: C.mutedDark });
@@ -163,7 +163,7 @@ export function makeScenes2D(env, S3) {
       });
     }
     if (badge) { panel(ctx, 1450, 860, 400, 56, { fill: rgba(C.teal, 0.2), r: 28, alpha: badge.alpha }); text(ctx, badge.label, 1650, 896, { font: '700 22px NS', color: C.teal, align: 'center', alpha: badge.alpha }); }
-    ctx.fillStyle = '#0c1c30'; ctx.fillRect(100, 850, 1280, 150);
+    ctx.fillStyle = C.ui1; ctx.fillRect(100, 850, 1280, 150);
     for (let i = 0; i < 5; i++) { ctx.save(); ctx.globalAlpha = alpha * 0.85; ctx.drawImage(samples[i], 120 + i * 250, 870, 220, 124); ctx.restore(); }
     ctx.restore();
   }
@@ -240,6 +240,7 @@ export function makeScenes2D(env, S3) {
 
   function brand_card(ctx, P) {
     ctx.drawImage(frozenPlate('S03'), 0, 0);
+    if (THEME.vibrant) { ctx.save(); ctx.globalAlpha = 0.85; bgNavy(ctx); ctx.restore(); }
     drawLine(ctx, [[912, 628], [1008, 628]], easeOut(seg(P.tb, 0.4, 0.8)), { width: 4 });
   }
 
@@ -255,7 +256,7 @@ export function makeScenes2D(env, S3) {
     DOTS.forEach((p, i) => {
       const a = easeOut(seg(tb, i * 0.02, i * 0.02 + 0.35));
       const hi = i === HI ? easeOut(seg(tb, 1.0, 1.6)) : 0;
-      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = hi ? C.teal : '#5d7f99';
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = hi ? C.teal : C.dot;
       ctx.beginPath(); ctx.arc(p[0], p[1], 7 + hi * 9, 0, 7); ctx.fill();
       if (hi) { const ph = ((tb - 1.0) % 1) / 1; ctx.strokeStyle = rgba(C.teal, 0.6 * (1 - ph)); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p[0], p[1], 16 + ph * 40, 0, 7); ctx.stroke(); }
       ctx.restore();
@@ -296,11 +297,12 @@ export function makeScenes2D(env, S3) {
   }
   function scenario_tiles(ctx, P) {
     ctx.drawImage(frozenPlate('S05', 16, 0.62), 0, 0);
+    if (THEME.vibrant) { ctx.save(); ctx.globalAlpha = 0.7; bgNavy(ctx); ctx.restore(); }
     const tb = P.tb;
     for (let i = 0; i < 5; i++) {
       const x = 128 + i * 341, y = 320, a = easeOut(seg(tb, 0.1 + 0.4 * i, 0.45 + 0.4 * i)), dy = (1 - a) * 24;
       const pass = easeOut(seg(tb, 3.2 + 0.2 * i, 3.45 + 0.2 * i));
-      panel(ctx, x, y + dy, 300, 300, { fill: 'rgba(15,43,70,.86)', r: 16, alpha: a });
+      panel(ctx, x, y + dy, 300, 300, { fill: C.tile, r: 16, alpha: a, glass: THEME.vibrant });
       ctx.save(); ctx.globalAlpha = a; rr(ctx, x, y + dy, 300, 300, 16); ctx.strokeStyle = rgba(C.teal, 0.85 * pass); ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
       dashRect(ctx, x - 8, y - 8 + dy, 316, 316, { alpha: a * easeOut(seg(tb, 2.0, 2.3)) * (1 - pass) });
       icon(ctx, i, x + 150, y + 150 + dy, 96, pass > 0.5 ? C.teal : 'rgba(255,255,255,.9)', a);
@@ -316,7 +318,7 @@ export function makeScenes2D(env, S3) {
     const t = P.t;
     SLOTS.forEach((s, i) => {
       const act = t >= i * 2;
-      panel(ctx, s.x, s.y, s.w, s.h, { fill: act ? C.navy800 : 'rgba(15,43,70,.45)', r: 14 });
+      panel(ctx, s.x, s.y, s.w, s.h, { fill: act ? C.navy800 : C.slotOff, r: 14 });
       ctx.save(); rr(ctx, s.x, s.y, s.w, s.h, 14); ctx.strokeStyle = act ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.06)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
     });
     const s0 = SLOTS[0], s1 = SLOTS[1], s2 = SLOTS[2];
@@ -460,7 +462,7 @@ export function makeScenes2D(env, S3) {
   function validate_terminal(ctx, P) {
     bgNavy(ctx);
     const tb = P.tb, x = 180, y = 130, w = 1560, h = 840;
-    panel(ctx, x, y, w, h, { fill: '#0b1220', r: 16, shadow: true });
+    panel(ctx, x, y, w, h, { fill: C.term, r: 16, shadow: true });
     ['#ef4444', '#f59e0b', '#22c55e'].forEach((c, i) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x + 34 + i * 26, y + 30, 8, 0, 7); ctx.fill(); });
     text(ctx, '场景校验.py', x + 130, y + 38, { font: '400 22px NS', color: C.mutedDark });
     const code = (shotById.S11.text.find(t => t.style === 'code') || {}).content || '';
@@ -586,7 +588,7 @@ export function makeScenes2D(env, S3) {
       const k = easeInOut(seg(tb, 0.4 + 0.35 * i, 1.0 + 0.35 * i)), a = easeOut(seg(tb, 0.35 + 0.35 * i, 0.55 + 0.35 * i));
       const x = lerp(780, xs[i] + 20, k), y = lerp(150, 410, k);
       drawLine(ctx, [[960, 240], [x + 180, y]], 1, { width: 2, glow: 0, alpha: a * 0.6 });
-      panel(ctx, x, y, 360, 110, { fill: '#163a59', r: 12, alpha: a });
+      panel(ctx, x, y, 360, 110, { fill: C.card2, r: 12, alpha: a });
       text(ctx, s, x + 28, y + 66, { font: '700 30px NS', alpha: a });
       if (i === 2 && k >= 1) check(ctx, x + 320, y + 55, 28, easeOut(seg(tb, 1.9, 2.2)));
     });
@@ -597,7 +599,7 @@ export function makeScenes2D(env, S3) {
   function cardVisual(ctx, i, x, y, w, h) {
     if (i === 0) for (let k = 0; k < 6; k++) ctx.drawImage(samples[k], x + (k % 3) * (w / 3), y + Math.floor(k / 3) * (h / 2), w / 3 - 6, h / 2 - 6);
     if (i === 1) { const R = rng(4); ctx.fillStyle = '#3b82a0'; for (let k = 0; k < 900; k++) { const u = R(); const px = x + R() * w, py = u < 0.6 ? y + h * 0.5 + (R() - 0.5) * h * 0.3 : y + R() * h; if (u < 0.6 || Math.abs(px - (x + w / 2)) < 18) ctx.fillRect(px, py, 2, 2); } ctx.fillStyle = C.amber; for (let k = 0; k < 80; k++) ctx.fillRect(x + w / 2 + (R() - 0.5) * 30, y + h * 0.66 + (R() - 0.5) * 24, 2, 2); }
-    if (i === 2) { ctx.fillStyle = '#0b1220'; ctx.fillRect(x, y, w, h); [[C.muted, 0.6], [C.teal, 0.8], ['#cbd5e1', 0.5], [C.amber, 0.4], ['#cbd5e1', 0.7]].forEach(([c, l], k) => { ctx.fillStyle = c; ctx.fillRect(x + 16, y + 20 + k * 34, (w - 32) * l, 12); }); }
+    if (i === 2) { ctx.fillStyle = C.term; ctx.fillRect(x, y, w, h); [[C.muted, 0.6], [C.teal, 0.8], ['#cbd5e1', 0.5], [C.amber, 0.4], ['#cbd5e1', 0.7]].forEach(([c, l], k) => { ctx.fillStyle = c; ctx.fillRect(x + 16, y + 20 + k * 34, (w - 32) * l, 12); }); }
     if (i === 3) { ctx.fillStyle = C.paper; ctx.fillRect(x + 40, y, w - 80, h); ctx.fillStyle = '#e2e8f0'; for (let k = 0; k < 4; k++) ctx.fillRect(x + 60, y + 20 + k * 22, w - 140 - k * 20, 8); ctx.drawImage(caseThumb, x + 70, y + 110, 170, 80); }
   }
   function deliverables(ctx, P) {
@@ -663,18 +665,24 @@ export function makeScenes2D(env, S3) {
   }
   function recruit_total(ctx, P) {
     bgNavy(ctx, { dots: false }); drawGrid(ctx, 0.35);
+    // 动感主题：再叠一层半透明动态背景，把上一镜的缩略图（含浅色流程卡）压到后面，避免从玻璃卡边缘透出
+    if (THEME.vibrant) { ctx.save(); ctx.globalAlpha = 0.65; bgNavy(ctx, { dots: false }); ctx.restore(); }
     const tb = P.tb, k = easeOut(seg(tb, 0, 0.35)), y = lerp(1100, 140, k);
-    panel(ctx, 160, y, 1600, 800, { fill: C.paper, r: 24, shadow: true });
+    const V = THEME.vibrant, ink = V ? '#fff' : C.ink, sub = V ? C.mutedDark : C.muted;
+    if (V) { rr(ctx, 160, y, 1600, 800, 24); ctx.fillStyle = 'rgba(4,22,86,.82)'; ctx.fill(); }
+    panel(ctx, 160, y, 1600, 800, V ? { r: 24 } : { fill: C.paper, r: 24, shadow: true });
     if (k < 1) return;
     const n = Math.round(58 * easeOut(seg(tb, 0.2, 1.4)));
     ctx.save(); ctx.font = '900 220px NS'; const nw = ctx.measureText(String(n)).width; ctx.restore();
-    text(ctx, String(n), 250, 520, { font: '900 220px NS', color: C.ink });
-    text(ctx, '人', 262 + nw, 520, { font: '700 72px NS', color: C.muted });
+    let numFill = ink;
+    if (V) { numFill = ctx.createLinearGradient(0, 330, 0, 520); numFill.addColorStop(0, '#ffffff'); numFill.addColorStop(1, '#5FD8FF'); }
+    ctx.save(); if (V) { ctx.shadowColor = 'rgba(80,190,255,.55)'; ctx.shadowBlur = 30; } text(ctx, String(n), 250, 520, { font: '900 220px NS', color: numFill }); ctx.restore();
+    text(ctx, '人', 262 + nw, 520, { font: '700 72px NS', color: sub });
     const ba = easeOut(seg(tb, 1.5, 2.0));
-    text(ctx, '学历结构', 1000, 330, { font: '400 24px NS', color: C.muted, alpha: ba });
-    [['本科', 50, C.ink], ['硕士', 5, C.teal5], ['博士', 3, C.amber7]].forEach(([s, v, c], i) => {
+    text(ctx, '学历结构', 1000, 330, { font: '400 24px NS', color: sub, alpha: ba });
+    [['本科', 50, V ? C.sky : C.ink], ['硕士', 5, V ? C.teal : C.teal5], ['博士', 3, V ? C.amber : C.amber7]].forEach(([s, v, c], i) => {
       const yy = 390 + i * 90;
-      text(ctx, s, 1000, yy + 30, { font: '700 28px NS', color: C.ink, alpha: ba });
+      text(ctx, s, 1000, yy + 30, { font: '700 28px NS', color: ink, alpha: ba });
       ctx.save(); ctx.globalAlpha = ba; ctx.fillStyle = c; rr(ctx, 1090, yy + 4, Math.max(24, 560 * (v / 50)) * ba, 34, 6); ctx.fill(); ctx.restore();
       text(ctx, String(v), 1090 + Math.max(24, 560 * (v / 50)) + 18, yy + 32, { font: '900 30px NS', color: c, alpha: ba });
     });
@@ -706,7 +714,7 @@ export function makeScenes2D(env, S3) {
     });
     ctx.fillStyle = 'rgba(6,32,69,.25)'; ctx.fillRect(768, 0, 1152, H);
     ctx.save(); ctx.translate(-(1 - k) * 200, 0);
-    ctx.fillStyle = C.navy800; ctx.fillRect(0, 0, 768, H); ctx.fillStyle = rgba(C.teal, 0.6); ctx.fillRect(766, 0, 3, H);
+    ctx.fillStyle = C.side; ctx.fillRect(0, 0, 768, H); ctx.fillStyle = rgba(C.teal, 0.6); ctx.fillRect(766, 0, 3, H);
     ctx.restore();
   }
 

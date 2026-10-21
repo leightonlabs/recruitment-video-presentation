@@ -1,11 +1,15 @@
 // 粗剪主程序：读取分镜数据，按全片时间找到镜头与拍，调用对应场景绘制画面，并按 text 字段排版文字层。
 import { makeScenes2D } from './scenes2d.js';
 import { makeScenes3D } from './scenes3d.js';
-import { seg, easeOut } from './draw.js';
+import { seg, easeOut, applyTheme, setNow, THEME } from './draw.js';
 
 const getJSON = async url => (await fetch(url)).json();
 const loadImage = url => new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = url; });
 
+// 主题：?theme=vibrant（默认，动感科技蓝）或 classic（原深蓝纯色）；?clean=1 去掉审阅信息条
+const params = new URLSearchParams(location.search);
+applyTheme(params.get('theme') || 'vibrant');
+document.body.classList.add(THEME.name);
 const story = await getJSON('../docs/03-分镜数据.json');
 const heroA = await getJSON('../build/assets/hero_anchors.json');
 const hero = await loadImage('../build/assets/hero.png');
@@ -47,7 +51,7 @@ const SHOT_ZONES = {
   S15: { _claim: ['board'] },
   S16: { center: { x: 960, y: 870, align: 'center' }, _claim: ['card_1', 'card_2', 'card_3', 'card_4'] },
   S17: { lane_1: { x: 250, y: 398 }, node_1: { x: 1150, y: 318 }, node_2: { x: 1150, y: 458 }, node_3: { x: 1150, y: 598 }, lane_2: { x: 250, y: 740, w: 1400 } },
-  S18: { card: { x: 260, y: 232, gap: 300, cls: 'light' }, _claim: ['grid'], _claimStyle: ['stat'] },
+  S18: { card: { x: 260, y: 232, gap: 300, cls: THEME.vibrant ? '' : 'light' }, _claim: ['grid'], _claimStyle: ['stat'] },
   S19: { header: { x: 128, y: 92 }, card_a: { x: 170, y: 640, w: 720, gap: 14 }, card_b: { x: 1032, y: 640, w: 720, gap: 14 } },
   S20: { panel: { x: 110, y: 540, vAlign: 'middle', w: 560, gap: 18 } },
   S21: { panel: { x: 96, y: 540, vAlign: 'middle', w: 664, gap: 16 } },
@@ -125,6 +129,7 @@ function updateText(shot, t) {
 // ---------- 审阅信息条 ----------
 const ROUTE = { G: '代码', I: 'AI静帧(占位)', A: 'AI视频(占位)', R: '实拍' };
 const rev = document.getElementById('rev');
+if (params.get('clean')) rev.style.display = 'none';
 const clock = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${(t % 60).toFixed(2).padStart(5, '0')}`;
 
 // ---------- 逐帧入口 ----------
@@ -136,6 +141,7 @@ window.seekFrame = f => {
   const bi = Math.max(0, shot.beats.findIndex(b => t >= b.t[0] && t < b.t[1]));
   const beat = shot.beats[bi];
   env.anchors = {};
+  setNow(T);
   ctx.save();
   ctx.clearRect(0, 0, 1920, 1080);
   const scene = beat.src === 'A' ? 'plate' : beat.scene;
