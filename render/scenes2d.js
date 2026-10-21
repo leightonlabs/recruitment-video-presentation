@@ -256,9 +256,9 @@ export function makeScenes2D(env, S3) {
     DOTS.forEach((p, i) => {
       const a = easeOut(seg(tb, i * 0.02, i * 0.02 + 0.35));
       const hi = i === HI ? easeOut(seg(tb, 1.0, 1.6)) : 0;
-      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = hi ? C.teal : C.dot;
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = hi ? C.hi : C.dot;
       ctx.beginPath(); ctx.arc(p[0], p[1], 7 + hi * 9, 0, 7); ctx.fill();
-      if (hi) { const ph = ((tb - 1.0) % 1) / 1; ctx.strokeStyle = rgba(C.teal, 0.6 * (1 - ph)); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p[0], p[1], 16 + ph * 40, 0, 7); ctx.stroke(); }
+      if (hi) { const ph = ((tb - 1.0) % 1) / 1; ctx.strokeStyle = rgba(C.hi, 0.6 * (1 - ph)); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p[0], p[1], 16 + ph * 40, 0, 7); ctx.stroke(); }
       ctx.restore();
     });
     env.anchors.dot = [DOTS[HI][0] + 28, DOTS[HI][1] - 10];
@@ -271,15 +271,15 @@ export function makeScenes2D(env, S3) {
       const hi = i === 2 && tb > 0.2, pop = hi ? 12 * easeOut(seg(tb, 0.2, 0.5)) : 0, am = (a0 + a1) / 2;
       const ox = Math.cos(am) * pop, oy = Math.sin(am) * pop, R0 = r0 * sc, R1 = r1 * sc;
       ctx.beginPath(); ctx.arc(cx + ox, cy + oy, R1, a0, a1); ctx.arc(cx + ox, cy + oy, R0, a1, a0, true); ctx.closePath();
-      ctx.fillStyle = hi ? C.teal5 : 'rgba(203,213,225,.18)'; ctx.fill();
+      ctx.fillStyle = hi ? C.hiFill : 'rgba(203,213,225,.18)'; ctx.fill();
     }
     text(ctx, '九大试点领域', cx, cy + 10, { font: '700 30px NS', align: 'center', alpha: sc });
-    text(ctx, '智慧能源', cx + 236, cy - 168, { font: '700 24px NS', color: C.teal, alpha: easeOut(seg(tb, 0.3, 0.6)) });
+    text(ctx, '智慧能源', cx + 236, cy - 168, { font: '700 24px NS', color: C.hi, alpha: easeOut(seg(tb, 0.3, 0.6)) });
     drawLine(ctx, [[cx + 120, cy + 175], [cx + 40, cy + 250]], easeOut(seg(tb, 0.25, 0.6)), { width: 2, glow: 0 });
     env.anchors.ring = [cx - 180, cy + 300];
     [0.4, 1.6, 2.8].forEach((t0, i) => {
       const a = easeOut(seg(tb, t0, t0 + 0.4)), y = [448, 588, 728][i];
-      text(ctx, String(i + 1), 1000, y + 58, { font: '900 72px NS', color: C.teal, alpha: a });
+      text(ctx, String(i + 1), 1000, y + 58, { font: '900 72px NS', color: C.hi, alpha: a });
       if (i) { ctx.save(); ctx.globalAlpha = a * 0.4; ctx.fillStyle = '#ACB6C0'; ctx.fillRect(1000, y - 20, 760, 1); ctx.restore(); }
     });
   }
@@ -302,7 +302,7 @@ export function makeScenes2D(env, S3) {
     for (let i = 0; i < 5; i++) {
       const x = 128 + i * 341, y = 320, a = easeOut(seg(tb, 0.1 + 0.4 * i, 0.45 + 0.4 * i)), dy = (1 - a) * 24;
       const pass = easeOut(seg(tb, 3.2 + 0.2 * i, 3.45 + 0.2 * i));
-      panel(ctx, x, y + dy, 300, 300, { fill: C.tile, r: 16, alpha: a, glass: THEME.vibrant });
+      panel(ctx, x, y + dy, 300, 300, { fill: C.tile, r: 16, alpha: a });
       ctx.save(); ctx.globalAlpha = a; rr(ctx, x, y + dy, 300, 300, 16); ctx.strokeStyle = rgba(C.teal, 0.85 * pass); ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
       dashRect(ctx, x - 8, y - 8 + dy, 316, 316, { alpha: a * easeOut(seg(tb, 2.0, 2.3)) * (1 - pass) });
       icon(ctx, i, x + 150, y + 150 + dy, 96, pass > 0.5 ? C.teal : 'rgba(255,255,255,.9)', a);
@@ -412,14 +412,14 @@ export function makeScenes2D(env, S3) {
     const tb = P.tb, x = 560, y = 70;
     paperPage(ctx, x, y, 800, 940, '场景应用规范 1.3 版');
     const by = y + 590;
-    ctx.fillStyle = C.teal5; ctx.fillRect(x + 40, by - 40, 6, 200 * easeOut(seg(tb, 0.1, 0.4)));
+    ctx.fillStyle = C.onLight; ctx.fillRect(x + 40, by - 40, 6, 200 * easeOut(seg(tb, 0.1, 0.4)));
     text(ctx, typed(docLines[0] || '', seg(tb, 0.2, 0.6)), x + 60, by, { font: '700 32px NS', color: C.ink });
     text(ctx, typed(docLines[1] || '', seg(tb, 0.7, 1.2)), x + 60, by + 60, { font: '400 30px NS', color: C.ink });
     text(ctx, typed(docLines[2] || '', seg(tb, 1.3, 1.8)), x + 60, by + 110, { font: '400 30px NS', color: C.ink });
     const a = easeOut(seg(tb, 1.6, 2.1));
     ctx.save(); ctx.globalAlpha = a; ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 16;
     ctx.drawImage(caseThumb, x + 470, by + 150 - (1 - a) * 80, 270, 152); ctx.restore();
-    text(ctx, '案例 017', x + 470, by + 330, { font: '700 20px NS', color: C.teal5, alpha: a });
+    text(ctx, '案例 017', x + 470, by + 330, { font: '700 20px NS', color: C.onLight, alpha: a });
   }
   function recheck_grid(ctx, P) {
     bgNavy(ctx);
@@ -432,7 +432,7 @@ export function makeScenes2D(env, S3) {
       if (done) {
         const tDone = 0.1 + 1.2 * ((r + 0.5) / 3), fix = fixes.includes(i), ok = !fix || tb > tDone + 0.3;
         const cx = x + w - 34, cy = y + 34;
-        ctx.fillStyle = ok ? C.teal5 : C.amber; ctx.beginPath(); ctx.arc(cx, cy, 20, 0, 7); ctx.fill();
+        ctx.fillStyle = ok ? C.onLight : C.amber; ctx.beginPath(); ctx.arc(cx, cy, 20, 0, 7); ctx.fill();
         if (ok) check(ctx, cx, cy, 22, 1, '#fff'); else text(ctx, '!', cx, cy + 9, { font: '900 26px NS', align: 'center', color: '#fff' });
         if (fix && !ok) { panel(ctx, x + 12, y + h - 52, 210, 40, { fill: rgba(C.amber, 0.9), r: 6 }); text(ctx, '按 1.3 版修正', x + 117, y + h - 24, { font: '700 20px NS', color: C.navy900, align: 'center' }); }
         if (fix && ok) dashRect(ctx, x + 2, y + 2, w - 4, h - 4, { color: C.teal, dash: [1, 0], width: 3 });
@@ -525,8 +525,8 @@ export function makeScenes2D(env, S3) {
     text(ctx, '实验记录', x + 44, y + 64, { font: '700 30px NS', color: C.ink });
     text(ctx, textOf('S12', 'card'), x + 44, y + 130, { font: '400 32px NS', color: C.ink });
     ['通用模型', '适配后模型'].forEach((s, i) => {
-      const bx = x + 44 + i * 350; rr(ctx, bx, y + 170, 320, 110, 10); ctx.strokeStyle = i ? C.teal5 : '#cbd5e1'; ctx.lineWidth = 2; ctx.stroke();
-      text(ctx, s, bx + 24, y + 214, { font: '700 24px NS', color: i ? C.teal5 : C.muted });
+      const bx = x + 44 + i * 350; rr(ctx, bx, y + 170, 320, 110, 10); ctx.strokeStyle = i ? C.onLight : '#cbd5e1'; ctx.lineWidth = 2; ctx.stroke();
+      text(ctx, s, bx + 24, y + 214, { font: '700 24px NS', color: i ? C.onLight : C.muted });
       text(ctx, '同一组对照场景', bx + 24, y + 254, { font: '400 20px NS', color: C.muted });
     });
   }
@@ -578,7 +578,7 @@ export function makeScenes2D(env, S3) {
   function task_board(ctx, P) {
     bgNavy(ctx);
     const tb = P.tb, cols = ['待办', '进行中', '验证'], xs = [200, 760, 1320], tasks = textOf('S15', 'board').split('｜');
-    xs.forEach((x, i) => { panel(ctx, x, 300, 400, 640, { fill: 'rgba(255,255,255,.035)', r: 14 }); text(ctx, cols[i], x + 30, 350, { font: '700 28px NS', color: C.mutedDark }); ctx.fillStyle = rgba(C.teal, 0.4); ctx.fillRect(x + 30, 368, 60, 3); });
+    xs.forEach((x, i) => { panel(ctx, x, 300, 400, 640, { fill: C.column, r: 14 }); text(ctx, cols[i], x + 30, 350, { font: '700 28px NS', color: C.mutedDark }); ctx.fillStyle = rgba(C.teal, 0.4); ctx.fillRect(x + 30, 368, 60, 3); });
     const pa = easeOut(seg(tb, 0, 0.3));
     panel(ctx, 660, 120, 600, 120, { fill: C.navy800, r: 14, alpha: pa });
     ctx.save(); ctx.globalAlpha = pa; rr(ctx, 660, 120, 600, 120, 14); ctx.strokeStyle = C.teal; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
@@ -647,7 +647,7 @@ export function makeScenes2D(env, S3) {
     board: () => cached('th-board', () => { const c = scratch(); whiteboard_flow(c.getContext('2d'), { tb: 2.2 }); return c; }),
     task: () => cached('th-task', () => { const c = scratch(); task_board(c.getContext('2d'), { tb: 3 }); return c; }),
     cloud: tb => { const c = cached('th-cloud', () => scratch()), g = c.getContext('2d'); bgNavy(g, { dots: false }); g.drawImage(S3.thumb.pointcloud(tb), 0, 0); return c; },
-    multi: tb => { const c = cached('th-multi', () => scratch()), g = c.getContext('2d'); bgNavy(g, { dots: false }); g.drawImage(S3.thumb.multi(tb), 0, 0); return c; },
+    multi: tb => { const c = cached('th-multi', () => scratch()), g = c.getContext('2d'); bgNavy(g, { dots: false }); if (THEME.vibrant) S3.thumb.views.forEach(v => panel(g, v[0], v[1], v[2], v[3], { r: 8 })); g.drawImage(S3.thumb.multi(tb), 0, 0); return c; },
   };
   const TILES = [[80, 70], [980, 70], [80, 560], [980, 560]];
   function drawGrid(ctx, a = 1, labels = null) {
@@ -665,25 +665,23 @@ export function makeScenes2D(env, S3) {
   }
   function recruit_total(ctx, P) {
     bgNavy(ctx, { dots: false }); drawGrid(ctx, 0.35);
-    // 动感主题：再叠一层半透明动态背景，把上一镜的缩略图（含浅色流程卡）压到后面，避免从玻璃卡边缘透出
-    if (THEME.vibrant) { ctx.save(); ctx.globalAlpha = 0.65; bgNavy(ctx, { dots: false }); ctx.restore(); }
+    // 动感主题：再叠一层半透明动态背景，把上一镜的缩略图（含浅色流程卡）压到后面
+    if (THEME.vibrant) { ctx.save(); ctx.globalAlpha = 0.8; bgNavy(ctx, { dots: false }); ctx.restore(); }
     const tb = P.tb, k = easeOut(seg(tb, 0, 0.35)), y = lerp(1100, 140, k);
-    const V = THEME.vibrant, ink = V ? '#fff' : C.ink, sub = V ? C.mutedDark : C.muted;
-    if (V) { rr(ctx, 160, y, 1600, 800, 24); ctx.fillStyle = 'rgba(4,22,86,.82)'; ctx.fill(); }
-    panel(ctx, 160, y, 1600, 800, V ? { r: 24 } : { fill: C.paper, r: 24, shadow: true });
+    // 浅色卡片：经典主题数字为深蓝，动感主题为与背景同色系的品牌蓝（实色，不加渐变与发光）
+    panel(ctx, 160, y, 1600, 800, { fill: C.paper, r: 24, shadow: true });
     if (k < 1) return;
-    const n = Math.round(58 * easeOut(seg(tb, 0.2, 1.4)));
+    const n = Math.round(58 * easeOut(seg(tb, 0.2, 1.4))), V = THEME.vibrant;
     ctx.save(); ctx.font = '900 220px NS'; const nw = ctx.measureText(String(n)).width; ctx.restore();
-    let numFill = ink;
-    if (V) { numFill = ctx.createLinearGradient(0, 330, 0, 520); numFill.addColorStop(0, '#ffffff'); numFill.addColorStop(1, '#5FD8FF'); }
-    ctx.save(); if (V) { ctx.shadowColor = 'rgba(80,190,255,.55)'; ctx.shadowBlur = 30; } text(ctx, String(n), 250, 520, { font: '900 220px NS', color: numFill }); ctx.restore();
-    text(ctx, '人', 262 + nw, 520, { font: '700 72px NS', color: sub });
+    text(ctx, String(n), 250, 520, { font: '900 220px NS', color: V ? C.onLight : C.ink });
+    text(ctx, '人', 262 + nw, 520, { font: '700 72px NS', color: V ? C.ink : C.muted });
     const ba = easeOut(seg(tb, 1.5, 2.0));
-    text(ctx, '学历结构', 1000, 330, { font: '400 24px NS', color: sub, alpha: ba });
-    [['本科', 50, V ? C.sky : C.ink], ['硕士', 5, V ? C.teal : C.teal5], ['博士', 3, V ? C.amber : C.amber7]].forEach(([s, v, c], i) => {
+    text(ctx, '学历结构', 1000, 330, { font: '400 24px NS', color: C.muted, alpha: ba });
+    // 条形与数字同色；动感主题的博士条用亮琥珀，数字用深一档的琥珀保证白底上可读
+    [['本科', 50, V ? C.onLight : C.ink], ['硕士', 5, V ? '#5B8CFF' : C.onLight], ['博士', 3, C.amber7]].forEach(([s, v, c], i) => {
       const yy = 390 + i * 90;
-      text(ctx, s, 1000, yy + 30, { font: '700 28px NS', color: ink, alpha: ba });
-      ctx.save(); ctx.globalAlpha = ba; ctx.fillStyle = c; rr(ctx, 1090, yy + 4, Math.max(24, 560 * (v / 50)) * ba, 34, 6); ctx.fill(); ctx.restore();
+      text(ctx, s, 1000, yy + 30, { font: '700 28px NS', color: C.ink, alpha: ba });
+      ctx.save(); ctx.globalAlpha = ba; ctx.fillStyle = V && i === 2 ? C.amber : c; rr(ctx, 1090, yy + 4, Math.max(24, 560 * (v / 50)) * ba, 34, 6); ctx.fill(); ctx.restore();
       text(ctx, String(v), 1090 + Math.max(24, 560 * (v / 50)) + 18, yy + 32, { font: '900 30px NS', color: c, alpha: ba });
     });
   }

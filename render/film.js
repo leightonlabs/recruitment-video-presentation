@@ -51,7 +51,7 @@ const SHOT_ZONES = {
   S15: { _claim: ['board'] },
   S16: { center: { x: 960, y: 870, align: 'center' }, _claim: ['card_1', 'card_2', 'card_3', 'card_4'] },
   S17: { lane_1: { x: 250, y: 398 }, node_1: { x: 1150, y: 318 }, node_2: { x: 1150, y: 458 }, node_3: { x: 1150, y: 598 }, lane_2: { x: 250, y: 740, w: 1400 } },
-  S18: { card: { x: 260, y: 232, gap: 300, cls: THEME.vibrant ? '' : 'light' }, _claim: ['grid'], _claimStyle: ['stat'] },
+  S18: { card: { x: 260, y: 232, gap: 300, cls: 'light' }, _claim: ['grid'], _claimStyle: ['stat'] },
   S19: { header: { x: 128, y: 92 }, card_a: { x: 170, y: 640, w: 720, gap: 14 }, card_b: { x: 1032, y: 640, w: 720, gap: 14 } },
   S20: { panel: { x: 110, y: 540, vAlign: 'middle', w: 560, gap: 18 } },
   S21: { panel: { x: 96, y: 540, vAlign: 'middle', w: 664, gap: 16 } },

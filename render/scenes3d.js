@@ -1,7 +1,7 @@
 // 三维场景：占位主图粒子化、设备点云、点云场景生长、三视图。WebGL 画面先渲染到离屏画布，再合成到主画布。
 import * as THREE from './node_modules/three/build/three.module.js';
 import { HERO_CAMERA, HERO_GEOMETRY as G } from './geometry.js';
-import { C, seg, clamp, lerp, easeOut, easeInOut, rng, bgNavy, text, drawLine, rgba } from './draw.js';
+import { C, THEME, seg, clamp, lerp, easeOut, easeInOut, rng, bgNavy, panel, text, drawLine, rgba } from './draw.js';
 
 export async function makeScenes3D(env) {
   const W = 1920, H = 1080;
@@ -157,10 +157,12 @@ export async function makeScenes3D(env) {
       bgNavy(ctx, { dots: false });
       const k = easeOut(seg(P.tb, 0, 0.5));
       const targets = multiFrame(P.tb);
+      // 动感主题：三个视窗垫不透明深蓝卡片，不用透明线框
+      if (THEME.vibrant) VP.forEach(v => panel(ctx, v[0], v[1], v[2], v[3], { r: 8, alpha: k }));
       ctx.save(); ctx.globalAlpha = k; ctx.drawImage(canvas, 0, 0); ctx.restore();
       ['主视', '俯视', '三维'].forEach((name, i) => {
         const v = VP[i];
-        ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = rgba(C.teal, 0.5); ctx.lineWidth = 2; ctx.strokeRect(v[0], v[1], v[2], v[3]); ctx.restore();
+        if (!THEME.vibrant) { ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = rgba(C.teal, 0.5); ctx.lineWidth = 2; ctx.strokeRect(v[0], v[1], v[2], v[3]); ctx.restore(); }
         text(ctx, name, v[0] + 16, v[1] - 14, { font: '700 24px NS', color: C.teal, alpha: k });
         ctx.save(); ctx.globalAlpha = k; ctx.strokeStyle = C.amber; ctx.lineWidth = 3; ctx.strokeRect(targets[i][0] - 18, targets[i][1] - 18, 36, 36); ctx.restore();
       });
@@ -169,6 +171,6 @@ export async function makeScenes3D(env) {
   };
   return {
     scenes,
-    thumb: { pointcloud: tb => pointcloudFrame(tb), scene: tb => sceneFrame(tb), multi: tb => { multiFrame(tb); return canvas; } },
+    thumb: { pointcloud: tb => pointcloudFrame(tb), scene: tb => sceneFrame(tb), multi: tb => { multiFrame(tb); return canvas; }, views: VP },
   };
 }
