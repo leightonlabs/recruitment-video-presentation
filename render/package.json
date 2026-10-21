@@ -1,0 +1,9 @@
+{
+  "name": "zhishu-recruitment-roughcut",
+  "private": true,
+  "type": "module",
+  "description": "按 docs/03-分镜数据.json 逐帧渲染招聘片粗剪",
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}
