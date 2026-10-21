@@ -51,6 +51,7 @@
 python3 tools/storyboard.py check     # 校验时间、阅读速度、配音语速、用词与资产引用
 python3 tools/storyboard.py summary   # 按镜头列出路线与语速
 python3 tools/storyboard.py srt       # 导出 build/subtitles.srt
+python3 tools/storyboard.py lrc       # 导出 build/subtitles.lrc（LRC 格式）
 python3 tools/storyboard.py prompts   # 重新生成 docs/07-AI生成提示词.md
 ```
 

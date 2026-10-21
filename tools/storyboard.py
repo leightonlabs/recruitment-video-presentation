@@ -5,6 +5,7 @@
   python3 tools/storyboard.py check              校验时间、阅读速度、配音语速、用词与资产引用
   python3 tools/storyboard.py summary            按镜头列出时间、路线和语速，并统计各路线时长
   python3 tools/storyboard.py srt [输出路径]      导出字幕，默认 build/subtitles.srt
+  python3 tools/storyboard.py lrc [输出路径]      导出 LRC 格式字幕，默认 build/subtitles.lrc
   python3 tools/storyboard.py prompts [输出路径]  生成 AI 提示词表，默认 docs/07-AI生成提示词.md
 
 仅依赖 Python 标准库。
@@ -250,7 +251,8 @@ def split_subtitle(text):
     return [re.sub(r"[，。；]$", "", line) for line in lines]
 
 
-def srt(data, out):
+def subtitle_cues(data):
+    """按各镜旁白生成字幕条目 [(开始秒, 结束秒, 文字)]，SRT 与 LRC 共用。"""
     cues = []
     for shot in data["shots"]:
         vo = shot.get("vo")
@@ -269,11 +271,39 @@ def srt(data, out):
             d = (b - a) * w / sum(weights)
             cues.append((base + t, base + t + d, line))
             t += d
+    return cues
+
+
+def shown(out):
+    return out.relative_to(ROOT) if out.is_relative_to(ROOT) else out
+
+
+def srt(data, out):
+    cues = subtitle_cues(data)
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         for i, (a, b, line) in enumerate(cues, 1):
             f.write(f"{i}\n{fmt_srt(a)} --> {fmt_srt(b)}\n{line}\n\n")
-    print(f"已写入 {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}（{len(cues)} 条）")
+    print(f"已写入 {shown(out)}（{len(cues)} 条）")
+
+
+def fmt_lrc(sec):
+    cs = round(sec * 100)
+    m, cs = divmod(cs, 6000)
+    return f"{m:02d}:{cs // 100:02d}.{cs % 100:02d}"
+
+
+def lrc(data, out):
+    """LRC 每行只有开始时间：下一条字幕没有紧接着出现时，在本条结束处加一行空文字清屏。"""
+    cues = subtitle_cues(data)
+    lines = [f"[ti:{data['title']}]", f"[length:{fmt_lrc(data['format']['duration_s'])[:5]}]"]
+    for i, (a, b, line) in enumerate(cues):
+        lines.append(f"[{fmt_lrc(a)}]{line}")
+        if i + 1 == len(cues) or cues[i + 1][0] - b > 0.05:
+            lines.append(f"[{fmt_lrc(b)}]")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"已写入 {shown(out)}（{len(cues)} 条）")
 
 
 def english(title, body):
@@ -362,7 +392,7 @@ def prompts(data, out):
 
 
 def main(argv):
-    if len(argv) < 2 or argv[1] not in ("check", "summary", "srt", "prompts"):
+    if len(argv) < 2 or argv[1] not in ("check", "summary", "srt", "lrc", "prompts"):
         print(__doc__)
         return 2
     data = load()
@@ -383,6 +413,8 @@ def main(argv):
     out = Path(argv[2]).resolve() if len(argv) > 2 else None
     if cmd == "srt":
         srt(data, out or ROOT / "build" / "subtitles.srt")
+    elif cmd == "lrc":
+        lrc(data, out or ROOT / "build" / "subtitles.lrc")
     else:
         prompts(data, out or ROOT / "docs" / "07-AI生成提示词.md")
     return 0
