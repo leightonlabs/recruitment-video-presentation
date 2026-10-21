@@ -54,11 +54,14 @@ python3 tools/storyboard.py srt       # 导出 build/subtitles.srt
 python3 tools/storyboard.py prompts   # 重新生成 docs/07-AI生成提示词.md
 ```
 
-生成粗剪（AI 画面、主图与旁白均为占位，用于审节奏与版式）：
+生成视频（AI 画面、主图与旁白均为占位）：
 
 ```bash
-./render/build.sh                     # 输出 build/粗剪-v4-150秒.mp4 与 720p 预览版
+node render/build.mjs --clean         # 精修版：输出 build/精修版-150秒-1080p.mp4
+node render/build.mjs                 # 粗剪：带审阅信息条，另出 720p 预览版
 ```
+
+在自己电脑上运行所需的软件与步骤见 [render/README.md](render/README.md)；也可以在仓库的 Actions 页面运行“渲染视频并发布”，由 GitHub 渲染后把成片发布到 Releases。
 
 ## 参考资料
 

@@ -1,0 +1,67 @@
+# 在 GitHub 服务器上渲染视频，并把成片作为附件发布到 Releases。
+# 用法：仓库页面 → Actions → “渲染视频并发布” → Run workflow。约需 45–90 分钟（取决于分配到的 CPU 核数）。
+# 同一标签再次运行时，会用新渲染的文件覆盖原附件。
+name: 渲染视频并发布
+
+on:
+  workflow_dispatch:
+    inputs:
+      clean:
+        description: 精修版（去掉审阅与测试信息，只出 1080p）；不勾选则出带审阅信息条的粗剪
+        type: boolean
+        default: true
+      tag:
+        description: 发布标签
+        type: string
+        default: video-150s
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 FFmpeg 与 numpy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          pip install numpy
+
+      - name: 安装 Node 依赖与浏览器
+        working-directory: render
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: 渲染
+        run: node render/build.mjs ${{ inputs.clean && '--clean' || '' }} "$(nproc)"
+
+      - name: 发布到 Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          # 附件文件名用英文（GitHub 会改写中文文件名），页面上显示的名称用中文
+          mkdir -p dist
+          assets=()
+          add() { if [ -f "$1" ]; then cp "$1" "dist/$2"; assets+=("dist/$2#$3"); fi; }
+          add "build/精修版-150秒-1080p.mp4" zhishu-recruitment-150s-1080p.mp4 "精修版 150秒 1080p"
+          add "build/粗剪-v4-150秒.mp4" zhishu-recruitment-150s-roughcut-1080p.mp4 "粗剪 150秒 1080p"
+          add "build/粗剪-v4-150秒-720p.mp4" zhishu-recruitment-150s-roughcut-720p.mp4 "粗剪 150秒 720p"
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "招聘宣传片 150 秒（$TAG）" \
+              --notes "由 render/build.mjs 按 docs/03-分镜数据.json 渲染（提交 ${GITHUB_SHA::7}）。AI 画面、主图与旁白仍为占位。"
+          fi
+          gh release upload "$TAG" "${assets[@]}" --clobber

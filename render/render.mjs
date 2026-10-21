@@ -6,14 +6,19 @@
 //   node render/render.mjs video [并行数]                 渲染全片画面 → build/roughcut/video.mp4
 //   node render/render.mjs sample <起-止,起-止,...> <输出.mp4>  渲染若干时间段并拼接成样片（附临时音轨）
 //
-// 环境变量：THEME=vibrant（默认，动感科技蓝）| classic（原深蓝纯色）；CLEAN=1 去掉审阅信息条
+// 环境变量：THEME=vibrant（默认，动感科技蓝）| classic（原深蓝纯色）；CLEAN=1 去掉审阅信息条；
+//           BROWSER=chromium | chrome | msedge 指定浏览器（默认先用 Playwright 自带的 Chromium，没有时依次试本机的 Chrome、Edge）
 import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile, rm } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { extname, join, resolve } from 'node:path';
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = resolve(new URL('..', import.meta.url).pathname);
+const { chromium } = await import('playwright').catch(() => {
+  console.error('找不到 Playwright：请先在 render 目录运行 npm install');
+  process.exit(1);
+});
+const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const STORY = JSON.parse(await readFile(join(ROOT, 'docs/03-分镜数据.json'), 'utf8'));
 const FPS = STORY.format.fps;
 const TOTAL = Math.round(STORY.format.duration_s * FPS);
@@ -35,6 +40,18 @@ function serve() {
 const QUERY = `?${new URLSearchParams({ theme: process.env.THEME || 'vibrant', ...(process.env.CLEAN ? { clean: '1' } : {}) })}`;
 const ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-gpu-sandbox'];
 
+async function launch() {
+  const order = process.env.BROWSER ? [process.env.BROWSER] : ['chromium', 'chrome', 'msedge'];
+  let last;
+  for (const ch of order) {
+    try { return await chromium.launch({ args: ARGS, ...(ch === 'chromium' ? {} : { channel: ch }) }); } catch (e) { last = e; }
+  }
+  console.error('无法启动浏览器：请在 render 目录运行 npx playwright install chromium，或安装 Chrome / Edge。');
+  throw last;
+}
+// FFmpeg 拼接清单里统一用正斜杠，Windows 路径也能识别
+const listLine = p => `file '${p.replace(/\\/g, '/')}'`;
+
 async function openPage(browser, url) {
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   page.on('pageerror', e => console.error('页面错误：', e.message));
@@ -44,7 +61,7 @@ async function openPage(browser, url) {
 }
 
 async function hero(base) {
-  const browser = await chromium.launch({ args: ARGS });
+  const browser = await launch();
   const page = await openPage(browser, `${base}/render/hero.html`);
   await mkdir(join(ROOT, 'build/assets'), { recursive: true });
   await page.screenshot({ path: join(ROOT, 'build/assets/hero.png') });
@@ -55,7 +72,7 @@ async function hero(base) {
 }
 
 async function stills(base, times, outDir) {
-  const browser = await chromium.launch({ args: ARGS });
+  const browser = await launch();
   const page = await openPage(browser, `${base}/render/film.html${QUERY}`);
   await mkdir(outDir, { recursive: true });
   for (const t of times) {
@@ -68,7 +85,7 @@ async function stills(base, times, outDir) {
 }
 
 async function renderRange(base, from, to, out, tag) {
-  const browser = await chromium.launch({ args: ARGS });
+  const browser = await launch();
   const page = await openPage(browser, `${base}/render/film.html${QUERY}`);
   const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
     '-c:v', 'libx264', '-preset', 'fast', '-crf', '14', '-pix_fmt', 'yuv420p', '-r', String(FPS), out]);
@@ -96,7 +113,7 @@ async function video(base, workers) {
   }
   await Promise.all(parts.map(p => renderRange(base, p.from, p.to, p.out, p.tag)));
   const list = join(dir, 'parts.txt');
-  await writeFile(list, parts.map(p => `file '${p.out}'`).join('\n'));
+  await writeFile(list, parts.map(p => listLine(p.out)).join('\n'));
   await new Promise((ok, fail) => spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', join(dir, 'video.mp4')])
     .on('close', c => (c ? fail(new Error('拼接失败')) : ok())));
   for (const p of parts) await rm(p.out);
