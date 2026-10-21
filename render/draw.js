@@ -2,8 +2,8 @@
 //
 // 两套主题：
 //   classic  —— 原粗剪的深蓝纯色风格；
-//   vibrant  —— 动感科技蓝：明亮宝蓝底色，点阵光波、流动透视网格、细光线与粒子等清晰的动态元素；
-//               面板为不透明深蓝卡片，线条与文字以白色为主、琥珀色点睛，不用荧光发光效果。
+//   vibrant  —— 动感科技蓝：深蓝底上的极光光团、斜向扫光、流动透视网格、上下边带流光与景深粒子；
+//               前景用不透明的深宝蓝卡片、白色与蓝灰文字、香槟金点睛、实心蓝色标签，不用荧光色与线框。
 const THEMES = {
   classic: {
     navy900: '#062045', navy800: '#0F2B46', navy700: '#123E54',
@@ -14,14 +14,15 @@ const THEMES = {
     column: 'rgba(255,255,255,.035)', card2: '#163a59', term: '#0b1220', side: '#0F2B46', cloud: '#3b82a0', cloudFar: '#2a6f8f',
   },
   vibrant: {
-    // teal 在本主题中即“主线条色”，取白色；hi 为重点高亮（琥珀）；onLight 为浅色卡片上的强调色（品牌蓝）
-    navy900: '#061A5C', navy800: '#0A2270', navy700: '#1240B8',
-    teal: '#FFFFFF', teal5: '#FFFFFF', amber: '#FFB020', amber7: '#D97F00',
-    paper: '#FFFFFF', ink: '#0B1B4D', muted: '#5D6E92', mutedDark: '#C3D2F5', white: '#FFFFFF',
-    hi: '#FFB020', hiFill: '#FFB020', onLight: '#1747D6',
-    bgTop: '#1858F2', bgMid: '#0C3FCB', bgBottom: '#072B94',
-    ui0: '#061A5E', ui1: '#0A2270', tile: '#0A2270', slotOff: '#0D2E8A', dot: '#A9C2FF',
-    column: '#0A2270', card2: '#123A9E', term: '#06154A', side: '#0A2270', cloud: '#DCE8FF', cloudFar: '#7FA6FF',
+    // teal 在本主题中即“主线条色”（柔白）；hi 为点睛色（香槟金）；onLight 为纸面上的强调色；amber 仍用于画面中的目标高亮
+    navy900: '#020A2A', navy800: '#0E2163', navy700: '#0E3A9E',
+    teal: '#E6ECFF', teal5: '#E6ECFF', amber: '#FFB020', amber7: '#D98E04',
+    paper: '#F8FAFC', ink: '#0B1B4D', muted: '#6B7FA8', mutedDark: '#9FB0D6', white: '#FFFFFF',
+    hi: '#E6C27A', hiFill: '#E6C27A', onLight: '#1E4FD8',
+    sky: '#4CC3FF', electric: '#1E6BFF', violet: '#6A5CFF', streak: '#35E6E0',
+    bgTop: '#03104A', bgMid: '#062585', bgBottom: '#020B33',
+    ui0: '#061545', ui1: '#0C1D58', tile: '#0E2163', slotOff: '#0A1A52', dot: '#8EA6E0', column: '#0E2163',
+    card2: '#16307E', term: '#050E33', side: '#0A1A52', cloud: '#C8D6FF', cloudFar: '#5B7FE0',
   },
 };
 export const C = { ...THEMES.classic };
@@ -54,19 +55,24 @@ export function rr(ctx, x, y, w, h, r) {
   ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
-// 面板：动感主题下，默认深色面板（fill 为 navy800）为不透明卡片：投影、细白边与顶部高光线
+// 面板：动感主题下，默认深色面板（fill 为 navy800）为不透明深宝蓝卡片：上浅下深的微渐变、上亮下暗的细边、顶部高光线与柔和投影
 export function panel(ctx, x, y, w, h, { fill = C.navy800, stroke = null, r = 14, alpha = 1, shadow = false } = {}) {
   const isCard = THEME.vibrant && fill === C.navy800;
   ctx.save(); ctx.globalAlpha *= alpha;
-  if (shadow || isCard) { ctx.shadowColor = isCard ? 'rgba(3,14,60,.45)' : 'rgba(0,0,0,.35)'; ctx.shadowBlur = isCard ? 28 : 30; ctx.shadowOffsetY = 10; }
-  rr(ctx, x, y, w, h, r); ctx.fillStyle = fill; ctx.fill();
+  if (shadow || isCard) { ctx.shadowColor = isCard ? 'rgba(0,4,30,.55)' : 'rgba(0,0,0,.35)'; ctx.shadowBlur = isCard ? 40 : 30; ctx.shadowOffsetY = isCard ? 16 : 10; }
+  rr(ctx, x, y, w, h, r);
+  if (isCard) { const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, '#152B78'); g.addColorStop(1, '#0B1A4F'); ctx.fillStyle = g; }
+  else ctx.fillStyle = fill;
+  ctx.fill();
   ctx.shadowColor = 'transparent';
   if (isCard) {
-    ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1.5; ctx.stroke();
+    const edge = ctx.createLinearGradient(0, y, 0, y + h);
+    edge.addColorStop(0, 'rgba(170,195,255,.38)'); edge.addColorStop(1, 'rgba(170,195,255,.06)');
+    ctx.strokeStyle = edge; ctx.lineWidth = 1.25; ctx.stroke();
     ctx.save(); ctx.clip();
     const hl = ctx.createLinearGradient(x, 0, x + w, 0);
-    hl.addColorStop(0, 'rgba(255,255,255,0)'); hl.addColorStop(0.5, 'rgba(255,255,255,.32)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = hl; ctx.fillRect(x, y, w, 2);
+    hl.addColorStop(0, 'rgba(255,255,255,0)'); hl.addColorStop(0.5, 'rgba(255,255,255,.24)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hl; ctx.fillRect(x, y, w, 1.5);
     ctx.restore();
   }
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
@@ -85,7 +91,7 @@ export function polyLength(pts, close = true) {
   return L;
 }
 // 沿折线描出前 k（0–1）部分，带外发光：用于青色连接线。
-// 动感主题下不发光：主线条为半透明白，描线时线头更亮，描完后有一段白色光点沿线流动
+// 动感主题下不用彩色光晕：主线条为半透明柔白，描线时线头更亮，描完后有一段白色光点沿线流动
 export function drawLine(ctx, pts, k, { color = C.teal, width = 4, glow = 10, close = false, dash = null, alpha = 1, flow = true } = {}) {
   if (k <= 0) return;
   const L = polyLength(pts, close), V = THEME.vibrant, lit = V && flow && !dash && glow && L > 60;
@@ -101,7 +107,7 @@ export function drawLine(ctx, pts, k, { color = C.teal, width = 4, glow = 10, cl
     if (k < 1) pos = L * k;
     else { const off = (pts[0][0] * 7 + pts[0][1] * 13) % 997; pos = (NOW * 520 + off) % (L + len); }
     ctx.setLineDash([len, L + len]); ctx.lineDashOffset = -(pos - len);
-    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = width + 1;
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = width + 1; ctx.shadowColor = 'rgba(255,255,255,.7)'; ctx.shadowBlur = 8;
     polyPath(ctx, pts, close); ctx.stroke();
   }
   ctx.restore();
@@ -167,62 +173,90 @@ export function bgNavy(ctx, { top = C.navy900, bottom = C.navy800, dots = true }
   }
 }
 
-// 动态背景的元素都是清晰的点和细线，不用大面积模糊光斑，避免画面发虚
-const PARTS = (() => { const R = rng(41); return Array.from({ length: 70 }, () => ({ x: R() * 1920, y: R() * 1080, z: 0.3 + R() * 0.7, vx: 6 + R() * 14, vy: 10 + R() * 22, f: 0.6 + R() * 1.8, p: R() * 6.28 })); })();
-// 细光线只走画面上下两条带，避开中部内容区
-const STREAKS = (() => { const R = rng(53); return Array.from({ length: 6 }, (_, i) => ({ y: (i % 2 ? 900 : 60) + Math.floor(i / 2) * 44 + Math.round((R() - 0.5) * 20), len: 260 + R() * 260, v: 260 + R() * 260, o: R() * 4000, dir: i % 3 === 1 ? -1 : 1 })); })();
+const mk = (w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d')); return c; };
+const GLOW = mk(64, 64, g => {
+  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.22, 'rgba(190,235,255,.65)'); r.addColorStop(1, 'rgba(120,200,255,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64);
+});
+const GRAIN = mk(256, 256, g => {
+  const d = g.createImageData(256, 256), R = rng(9);
+  for (let i = 0; i < d.data.length; i += 4) { const v = R() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  g.putImageData(d, 0, 0);
+});
+const BLOBS = [ // 极光光团：颜色、基准位置、半径、漂移幅度与速度
+  { c: 'electric', x: 380, y: 260, r: 820, ax: 260, ay: 140, sx: 0.07, sy: 0.05, p: 0.0, a: 0.55 },
+  { c: 'sky', x: 1560, y: 220, r: 700, ax: 220, ay: 160, sx: 0.05, sy: 0.08, p: 1.7, a: 0.28 },
+  { c: 'violet', x: 1400, y: 900, r: 760, ax: 300, ay: 120, sx: 0.06, sy: 0.04, p: 3.1, a: 0.32 },
+  { c: 'electric', x: 600, y: 980, r: 620, ax: 240, ay: 100, sx: 0.08, sy: 0.06, p: 4.4, a: 0.35 },
+];
+const PARTS = (() => { const R = rng(41); return Array.from({ length: 150 }, () => ({ x: R() * 1920, y: R() * 1080, z: 0.25 + R() * 0.75, vx: 10 + R() * 25, vy: 6 + R() * 18, f: 0.8 + R() * 2.4, p: R() * 6.28 })); })();
+// 光流只走画面上下两条带，避开中部内容区
+const STREAMS = (() => { const R = rng(53); return Array.from({ length: 8 }, (_, i) => ({ y: (i % 2 ? 820 : 70) + Math.floor(i / 2) * 60 + (R() - 0.5) * 30, a: 40 + R() * 70, f: 0.002 + R() * 0.003, p: R() * 6.28, w: 0.15 + R() * 0.25, v: 380 + R() * 380, o: R() * 3000 })); })();
 
 function vibrantBg(ctx, { calm = false } = {}) {
   const T = NOW, W = 1920, H = 1080;
-  // 底色：左上明亮、右下深沉的宝蓝斜向渐变，再加一处缓慢移动的大范围亮区
-  const base = ctx.createLinearGradient(0, 0, W * 0.55, H * 1.15);
-  base.addColorStop(0, C.bgTop); base.addColorStop(0.5, C.bgMid); base.addColorStop(1, C.bgBottom);
+  const base = ctx.createLinearGradient(0, 0, 0, H);
+  base.addColorStop(0, C.bgTop); base.addColorStop(0.55, C.bgMid); base.addColorStop(1, C.bgBottom);
   ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
-  const lx = 620 + Math.sin(T * 0.11) * 360, ly = 240 + Math.cos(T * 0.08) * 140;
-  const lg = ctx.createRadialGradient(lx, ly, 0, lx, ly, 1400);
-  lg.addColorStop(0, `rgba(110,170,255,${calm ? 0.14 : 0.22})`); lg.addColorStop(1, 'rgba(110,170,255,0)');
-  ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H);
-  // 点阵：每 40px 一个方点，一道斜向光波每 6 秒扫过，经过处点变亮变大
-  const wave = ((T / 6) % 1) * (W + H + 900) - 450;
-  for (let y = 20; y < H; y += 40) for (let x = 20; x < W; x += 40) {
-    const d = Math.abs(x + y * 0.8 - wave), k = d < 260 ? Math.pow(1 - d / 260, 2) : 0;
-    const a = (calm ? 0.07 : 0.1) + k * (calm ? 0.16 : 0.3), sz = 2 + k * 1.5;
-    ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`; ctx.fillRect(x - sz / 2, y - sz / 2, sz, sz);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const b of BLOBS) {
+    const x = b.x + Math.sin(T * b.sx * 6.28 + b.p) * b.ax, y = b.y + Math.cos(T * b.sy * 6.28 + b.p) * b.ay;
+    const r = b.r * (1 + 0.08 * Math.sin(T * 0.4 + b.p)), a = b.a * (calm ? 0.5 : 1);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, rgba(C[b.c], a)); g.addColorStop(0.6, rgba(C[b.c], a * 0.3)); g.addColorStop(1, rgba(C[b.c], 0));
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
-  // 透视网格：横线向观众流动
+  // 斜向光带，每 7 秒扫过一次
+  const ph = (T % 7) / 7, bx = lerp(-900, 2700, ph);
+  ctx.save(); ctx.transform(1, 0, -0.5, 1, 0, 0);
+  const sw = ctx.createLinearGradient(bx - 260, 0, bx + 260, 0);
+  sw.addColorStop(0, 'rgba(120,200,255,0)'); sw.addColorStop(0.5, `rgba(120,200,255,${calm ? 0.035 : 0.06})`); sw.addColorStop(1, 'rgba(120,200,255,0)');
+  ctx.fillStyle = sw; ctx.fillRect(bx - 260, 0, 520 + H, H); ctx.restore();
+  ctx.restore();
+  // 透视数据网格：横线向观众流动
   if (!calm) {
-    const hy = 700, vx = 960;
+    const hy = 650, vx = 960;
     ctx.save(); ctx.lineWidth = 1;
-    for (let x = -1500; x <= 3400; x += 160) {
-      const g = ctx.createLinearGradient(0, hy, 0, H); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,.16)');
+    for (let x = -1500; x <= 3400; x += 150) {
+      const g = ctx.createLinearGradient(0, hy, 0, H); g.addColorStop(0, rgba(C.sky, 0)); g.addColorStop(1, rgba(C.sky, 0.16));
       ctx.strokeStyle = g; ctx.beginPath(); ctx.moveTo(vx + (x - vx) * 0.08, hy); ctx.lineTo(x, H); ctx.stroke();
     }
-    for (let i = 0; i < 12; i++) {
-      const z = (i + ((T * 0.4) % 1)) / 12, y = hy + (H - hy) * Math.pow(z, 2.2);
-      ctx.strokeStyle = `rgba(255,255,255,${(0.18 * z).toFixed(3)})`; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    for (let i = 0; i < 14; i++) {
+      const z = (i + ((T * 0.5) % 1)) / 14, y = hy + (H - hy) * Math.pow(z, 2.2);
+      ctx.strokeStyle = rgba(C.sky, 0.2 * z); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
     ctx.restore();
   }
-  // 细光线：上下边带内水平滑过的白色细线，带渐隐尾巴
-  STREAKS.slice(0, calm ? 2 : 6).forEach(s => {
-    const span = W + s.len * 2, p = (T * s.v + s.o) % span - s.len, x = s.dir > 0 ? p : W - p;
-    const g = ctx.createLinearGradient(x - s.dir * s.len, 0, x, 0);
-    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, `rgba(255,255,255,${calm ? 0.35 : 0.55})`);
-    ctx.fillStyle = g; ctx.fillRect(Math.min(x, x - s.dir * s.len), s.y, s.len, 1.5);
+  // 光流：正弦曲线上的彗星光点
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  STREAMS.slice(0, calm ? 3 : 8).forEach(s => {
+    ctx.beginPath();
+    for (let x = -100; x <= W + 100; x += 40) { const y = s.y + Math.sin(x * s.f + s.p + T * s.w) * s.a; x < -99 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+    ctx.setLineDash([]); ctx.strokeStyle = rgba(C.sky, calm ? 0.04 : 0.07); ctx.lineWidth = 1.5; ctx.stroke();
+    const L = W + 400, pos = (T * s.v + s.o) % (L + 600);
+    ctx.setLineDash([220, L + 600]); ctx.lineDashOffset = -(pos - 220);
+    ctx.strokeStyle = rgba(C.streak, calm ? 0.3 : 0.45); ctx.lineWidth = 2; ctx.shadowColor = rgba(C.streak, 0.9); ctx.shadowBlur = 12; ctx.stroke();
+    ctx.shadowBlur = 0;
   });
-  // 粒子：实心小圆点，三层景深缓慢上浮并闪烁
-  ctx.save(); ctx.fillStyle = '#FFFFFF';
+  ctx.restore();
+  // 粒子：三层景深，缓慢漂移并闪烁
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
   PARTS.forEach((p, i) => {
     if (calm && i % 2) return;
     const x = ((p.x + T * p.vx * p.z) % W + W) % W, y = ((p.y - T * p.vy * p.z) % H + H) % H;
-    const tw = 0.5 + 0.5 * Math.sin(T * p.f + p.p);
-    ctx.globalAlpha = (0.25 + 0.5 * tw) * p.z; ctx.beginPath(); ctx.arc(x, y, 1 + 1.8 * p.z, 0, 7); ctx.fill();
+    const tw = 0.5 + 0.5 * Math.sin(T * p.f + p.p), s = 5 + 20 * p.z * (0.6 + 0.4 * tw);
+    ctx.globalAlpha = (0.2 + 0.6 * tw) * p.z; ctx.drawImage(GLOW, x - s / 2, y - s / 2, s, s);
   });
   ctx.restore();
-  // 轻微压暗四角
-  const v = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 1.05);
-  v.addColorStop(0, 'rgba(4,18,80,0)'); v.addColorStop(1, 'rgba(4,18,80,.35)');
+  // 暗角与颗粒
+  const v = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 1.0);
+  v.addColorStop(0, 'rgba(2,8,40,0)'); v.addColorStop(1, 'rgba(2,8,40,.6)');
   ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.globalAlpha = 0.035; ctx.globalCompositeOperation = 'overlay';
+  const ox = Math.floor((T * 997) % 256), oy = Math.floor((T * 613) % 256);
+  ctx.translate(-ox, -oy); ctx.fillStyle = ctx.createPattern(GRAIN, 'repeat'); ctx.fillRect(0, 0, W + 256, H + 256);
+  ctx.restore();
 }
 
 // 以图像坐标 (cx, cy) 为中心缩放 s 倍、放到屏幕 (sx, sy)，返回图像坐标 → 屏幕坐标的映射

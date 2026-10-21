@@ -303,9 +303,11 @@ export function makeScenes2D(env, S3) {
       const x = 128 + i * 341, y = 320, a = easeOut(seg(tb, 0.1 + 0.4 * i, 0.45 + 0.4 * i)), dy = (1 - a) * 24;
       const pass = easeOut(seg(tb, 3.2 + 0.2 * i, 3.45 + 0.2 * i));
       panel(ctx, x, y + dy, 300, 300, { fill: C.tile, r: 16, alpha: a });
-      ctx.save(); ctx.globalAlpha = a; rr(ctx, x, y + dy, 300, 300, 16); ctx.strokeStyle = rgba(C.teal, 0.85 * pass); ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
-      dashRect(ctx, x - 8, y - 8 + dy, 316, 316, { alpha: a * easeOut(seg(tb, 2.0, 2.3)) * (1 - pass) });
-      icon(ctx, i, x + 150, y + 150 + dy, 96, pass > 0.5 ? C.teal : 'rgba(255,255,255,.9)', a);
+      // 动感主题：空缺时为柔白虚线框，完成适配后卡片描金边、图标变金色
+      const V = THEME.vibrant;
+      ctx.save(); ctx.globalAlpha = a; rr(ctx, x, y + dy, 300, 300, 16); ctx.strokeStyle = rgba(C.hi, 0.85 * pass); ctx.lineWidth = V ? 2 : 3; ctx.stroke(); ctx.restore();
+      dashRect(ctx, x - 8, y - 8 + dy, 316, 316, { color: V ? 'rgba(230,236,255,.55)' : C.amber, width: V ? 2 : 3, alpha: a * easeOut(seg(tb, 2.0, 2.3)) * (1 - pass) });
+      icon(ctx, i, x + 150, y + 150 + dy, 96, pass > 0.5 ? C.hi : 'rgba(255,255,255,.9)', a);
     }
     drawLine(ctx, [[40, 470], [1880, 470]], easeInOut(seg(tb, 3.2, 4.3)), { width: 4, glow: 14 });
   }
@@ -664,24 +666,24 @@ export function makeScenes2D(env, S3) {
     drawGrid(ctx, easeOut(seg(P.tb, 0, 0.5)), textOf('S18', 'grid').split('｜'));
   }
   function recruit_total(ctx, P) {
-    bgNavy(ctx, { dots: false }); drawGrid(ctx, 0.35);
-    // 动感主题：再叠一层半透明动态背景，把上一镜的缩略图（含浅色流程卡）压到后面
-    if (THEME.vibrant) { ctx.save(); ctx.globalAlpha = 0.8; bgNavy(ctx, { dots: false }); ctx.restore(); }
     const tb = P.tb, k = easeOut(seg(tb, 0, 0.35)), y = lerp(1100, 140, k);
-    // 浅色卡片：经典主题数字为深蓝，动感主题为与背景同色系的品牌蓝（实色，不加渐变与发光）
-    panel(ctx, 160, y, 1600, 800, { fill: C.paper, r: 24, shadow: true });
+    // 动感主题：上一镜的缩略图随卡片升起淡出，再叠一层半透明动态背景压到后面，避免浅色流程卡从卡片边缘露出
+    bgNavy(ctx, { dots: false }); drawGrid(ctx, THEME.vibrant ? 0.35 * (1 - k) : 0.35);
+    if (THEME.vibrant) { ctx.save(); ctx.globalAlpha = 0.8; bgNavy(ctx, { dots: false }); ctx.restore(); }
+    // 经典主题为浅色卡片、深蓝数字；动感主题为深宝蓝卡片、香槟金实色数字（不加渐变与发光）
+    const V = THEME.vibrant;
+    panel(ctx, 160, y, 1600, 800, V ? { r: 24 } : { fill: C.paper, r: 24, shadow: true });
     if (k < 1) return;
-    const n = Math.round(58 * easeOut(seg(tb, 0.2, 1.4))), V = THEME.vibrant;
+    const n = Math.round(58 * easeOut(seg(tb, 0.2, 1.4))), ink = V ? C.white : C.ink, sub = V ? C.mutedDark : C.muted;
     ctx.save(); ctx.font = '900 220px NS'; const nw = ctx.measureText(String(n)).width; ctx.restore();
-    text(ctx, String(n), 250, 520, { font: '900 220px NS', color: V ? C.onLight : C.ink });
-    text(ctx, '人', 262 + nw, 520, { font: '700 72px NS', color: V ? C.ink : C.muted });
+    text(ctx, String(n), 250, 520, { font: '900 220px NS', color: V ? C.hi : C.ink });
+    text(ctx, '人', 262 + nw, 520, { font: '700 72px NS', color: sub });
     const ba = easeOut(seg(tb, 1.5, 2.0));
-    text(ctx, '学历结构', 1000, 330, { font: '400 24px NS', color: C.muted, alpha: ba });
-    // 条形与数字同色；动感主题的博士条用亮琥珀，数字用深一档的琥珀保证白底上可读
-    [['本科', 50, V ? C.onLight : C.ink], ['硕士', 5, V ? '#5B8CFF' : C.onLight], ['博士', 3, C.amber7]].forEach(([s, v, c], i) => {
+    text(ctx, '学历结构', 1000, 330, { font: '400 24px NS', color: sub, alpha: ba });
+    [['本科', 50, V ? '#4C7DFF' : C.ink], ['硕士', 5, V ? '#9DB2FF' : C.onLight], ['博士', 3, V ? C.hi : C.amber7]].forEach(([s, v, c], i) => {
       const yy = 390 + i * 90;
-      text(ctx, s, 1000, yy + 30, { font: '700 28px NS', color: C.ink, alpha: ba });
-      ctx.save(); ctx.globalAlpha = ba; ctx.fillStyle = V && i === 2 ? C.amber : c; rr(ctx, 1090, yy + 4, Math.max(24, 560 * (v / 50)) * ba, 34, 6); ctx.fill(); ctx.restore();
+      text(ctx, s, 1000, yy + 30, { font: '700 28px NS', color: ink, alpha: ba });
+      ctx.save(); ctx.globalAlpha = ba; ctx.fillStyle = c; rr(ctx, 1090, yy + 4, Math.max(24, 560 * (v / 50)) * ba, 34, 6); ctx.fill(); ctx.restore();
       text(ctx, String(v), 1090 + Math.max(24, 560 * (v / 50)) + 18, yy + 32, { font: '900 30px NS', color: c, alpha: ba });
     });
   }
