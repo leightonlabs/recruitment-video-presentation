@@ -64,7 +64,8 @@ node render/build.mjs --clean --no-music   # 不放配乐，音轨只保留音�
 node render/render.mjs stills 2.4,30,61 build/review   # 参数为全片秒数
 node render/render.mjs sample "15-24,104-110" build/样片.mp4   # 截取若干时间段拼成样片，带音轨与字幕（需先完整渲染过一次）
 SUBS=0 CLEAN=1 node render/render.mjs sample "138-150" build/片尾.mp4   # 不烧字幕、无审阅信息条
-node render/render.mjs preview all build/preview   # 改版预览画面（数字孪生能源场站，preview.html），待确认后接入正片
+node render/render.mjs preview all build/preview   # 改版预览画面（数字孪生能源场站，preview.html）
+CLEAN=1 node render/render.mjs range 1876 2814 build/roughcut/补渲.mp4   # 只渲染某段帧（含起不含止，25 帧/秒），整片渲染中断时补齐缺失的分段
 ```
 
 ## 画面风格
