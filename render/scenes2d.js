@@ -845,8 +845,31 @@ export function makeScenes2D(env, S3) {
     drawLine(ctx, [[0, 610], [1060, 610]], easeInOut(seg(t, 0, 0.8)), { width: 4, glow: 12 });
     drawLine(ctx, [[1200, 320], [1200, 780]], easeInOut(seg(t, 0.4, 0.8)), { width: 2, glow: 0, color: rgba(C.teal, 0.5) });
     const a = easeOut(seg(t, 0.5, 0.9));
-    dashRect(ctx, 1300, 330, 300, 300, { color: rgba(C.edge, THEME.vibrant ? 0.6 : 1), width: 2, alpha: a, dash: [10, 8] });
-    text(ctx, '投递二维码', 1450, 488, { font: '700 28px NS', color: C.mutedDark, align: 'center', alpha: a });
+    if (env.qr) qrCard(ctx, env.qr, 1300, 330, 300, t);
+    else {
+      dashRect(ctx, 1300, 330, 300, 300, { color: rgba(C.edge, THEME.vibrant ? 0.6 : 1), width: 2, alpha: a, dash: [10, 8] });
+      text(ctx, '投递二维码', 1450, 488, { font: '700 28px NS', color: C.mutedDark, align: 'center', alpha: a });
+    }
+  }
+  // 投递二维码：白色圆角卡片升起，模块按对角线逐格显现；模块按整数像素绘制，静止后边缘清晰、便于扫码
+  function qrCard(ctx, qr, x, y, size, t) {
+    const k = easeOut(seg(t, 0.5, 0.9)), n = qr.size, m = Math.floor((size - 56) / n), x0 = Math.round(x + (size - n * m) / 2), y0 = Math.round(y + (size - n * m) / 2);
+    if (k <= 0) return;
+    ctx.save(); ctx.globalAlpha = k;
+    const s = lerp(0.94, 1, k); ctx.translate(x + size / 2, y + size / 2 + (1 - k) * 16); ctx.scale(s, s); ctx.translate(-(x + size / 2), -(y + size / 2));
+    ctx.shadowColor = 'rgba(0,4,30,.45)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
+    rr(ctx, x, y, size, size, 16); ctx.fillStyle = '#FFFFFF'; ctx.fill(); ctx.shadowColor = 'transparent';
+    const wave = seg(t, 0.6, 1.2) * 1.15;
+    ctx.fillStyle = '#0A1A40';
+    qr.modules.forEach((row, r) => {
+      for (let c = 0; c < n; c++) {
+        if (row[c] !== '1') continue;
+        const d = (r + c) / (2 * n - 2), va = clamp((wave - d) / 0.15);
+        if (va <= 0) continue;
+        ctx.globalAlpha = k * va; ctx.fillRect(x0 + c * m, y0 + r * m, m, m);
+      }
+    });
+    ctx.restore();
   }
 
   function missing(ctx, P) { bgNavy(ctx); text(ctx, `缺少场景：${P.scene}`, 960, 540, { font: '700 48px NS', color: C.amber, align: 'center' }); }

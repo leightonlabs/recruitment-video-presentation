@@ -33,6 +33,7 @@ cd ..
 node render/build.mjs --clean           # 精修版：去掉审阅与测试信息，输出 build/精修版-150秒-1080p.mp4
 node render/build.mjs                   # 粗剪：带审阅信息条与旁白提示音，另出 720p 预览版
 node render/build.mjs --clean 8         # 末尾数字为并行进程数，默认 4；CPU 核数多可以调大
+node render/build.mjs --clean --no-music   # 不放配乐，音轨只保留音效
 ```
 
 4 个进程约需 40 分钟（视 CPU 而定），渲染过程中会打印各进程进度。macOS、Linux 也可以用 `./render/build.sh`、`CLEAN=1 ./render/build.sh`，效果相同。
@@ -91,7 +92,7 @@ THEME=vibrant CLEAN=1 node render/render.mjs sample "15-24,143-150" build/样片
 | 同类样本图 | 由占位主图裁切、调色、加蒸汽或雨痕得到 | `IMG_SAMPLES` 或公司样本图 |
 | 旁白 | 与每句旁白音节数一致的提示音，标出位置与语速 | 正式配音 |
 | 配乐与音效 | 按 `music` 与 `audio` 字段合成的临时声音 | 授权配乐与音效 |
-| 投递二维码 | 虚线占位框 | 公司提供的二维码 |
+| 投递二维码 | 已使用公司提供的二维码：按原链接重新生成模块矩阵（`render/qr.json`），逐格绘制保证清晰；文件缺失时显示虚线占位框 | — |
 
 右上角的审阅信息条显示粗剪版本、镜号、时间码和当前画面的制作路线，便于按时间点提修改意见；`--clean` 时去掉。
 

@@ -3,6 +3,7 @@
 // 用法（在仓库根目录执行）：
 //   node render/build.mjs [并行数]           粗剪：带审阅信息条与旁白提示音，输出 1080p 与 720p 预览版
 //   node render/build.mjs --clean [并行数]   精修版：去掉审阅与测试信息，只输出高码率 1080p
+//   加 --no-music：不放配乐，音轨只保留音效
 // 并行数默认 4（每个进程是一个无头浏览器）；也可用环境变量 CLEAN=1 代替 --clean，THEME=classic 切换为原深蓝纯色风格。
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -15,7 +16,8 @@ const argv = process.argv.slice(2);
 const CLEAN = argv.includes('--clean') || !!process.env.CLEAN;
 const WORKERS = Number(argv.find(a => /^\d+$/.test(a))) || 4;
 const WIN = process.platform === 'win32';
-const env = { ...process.env, CLEAN: CLEAN ? '1' : '', VO_GUIDE: CLEAN ? '0' : '1' };
+const NO_MUSIC = argv.includes('--no-music') || process.env.MUSIC === '0';
+const env = { ...process.env, CLEAN: CLEAN ? '1' : '', VO_GUIDE: CLEAN ? '0' : '1', MUSIC: NO_MUSIC ? '0' : '1' };
 
 function run(cmd, args, { cwd = ROOT, shell = false } = {}) {
   const r = spawnSync(cmd, args, { cwd, env, stdio: 'inherit', shell });
@@ -38,9 +40,9 @@ if (!existsSync(join(ROOT, 'render/node_modules/three')) || !existsSync(join(ROO
 
 // ---------- 渲染 ----------
 const OUT = 'build/roughcut';
-const NAME = CLEAN ? 'build/精修版-150秒-1080p' : 'build/粗剪-v4-150秒';
+const NAME = (CLEAN ? 'build/精修版-150秒-1080p' : 'build/粗剪-v4-150秒') + (NO_MUSIC ? '-仅音效' : '');
 const t0 = Date.now();
-console.log(`== ${CLEAN ? '精修版' : '粗剪'}，${WORKERS} 个进程并行 ==`);
+console.log(`== ${CLEAN ? '精修版' : '粗剪'}${NO_MUSIC ? '（仅音效）' : ''}，${WORKERS} 个进程并行 ==`);
 try {
   fetchFonts(ROOT);
   run(PY, ['tools/storyboard.py', 'check']);

@@ -17,7 +17,9 @@ await Promise.all(['400 20px NS', '700 20px NS', '900 20px NS', '400 20px JB', '
 
 const FPS = story.format.fps;
 const ctx = document.getElementById('stage').getContext('2d');
-const env = { story, hero, heroA, anchors: {}, FPS, clean: !!params.get('clean') };
+// 投递二维码：render/qr.json 为按原链接重新生成的模块矩阵，缺失时片尾显示占位框
+const qr = await getJSON('./qr.json').catch(() => null);
+const env = { story, hero, heroA, qr, anchors: {}, FPS, clean: !!params.get('clean') };
 const S3 = await makeScenes3D(env);
 const SCENES = { ...makeScenes2D(env, S3), ...S3.scenes };
 

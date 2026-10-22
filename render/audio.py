@@ -6,7 +6,8 @@
 - 旁白提示音：没有配音时，用与旁白音节数一致的短促提示音标出每句旁白的位置与语速，并让配乐在此处压低。
 仅依赖 Python 标准库与 numpy，混音与响度标准化调用 FFmpeg。
 
-环境变量 VO_GUIDE=0：混音时不放旁白提示音（配乐也不再按旁白压低），用于去掉测试信息的版本。
+环境变量 VO_GUIDE=0：混音时不放旁白提示音（配乐也不再按旁白压低），用于去掉测试信息的版本；
+MUSIC=0：不放配乐，只保留音效（及旁白提示音，若未关闭）。
 """
 import json
 import os
@@ -112,6 +113,19 @@ def keys(sec=0.8):
     return out
 
 
+def roll():
+    """数字滚动：先密后疏的细小滴答，四位数字依次落定时各有一声较亮的落点。"""
+    out = np.zeros(int(1.0 * SR))
+    t0, gap = 0.0, 0.022
+    while t0 < 0.62:
+        add(out, t0, click() * 0.3)
+        t0 += gap
+        gap *= 1.08
+    for k in range(4):
+        add(out, 0.36 + k * 0.12, tick(1500 + k * 120) * 0.55)
+    return out
+
+
 def ticks(sec=1.2, n=10):
     out = np.zeros(int(sec * SR) + SR)
     for k in range(n):
@@ -120,7 +134,7 @@ def ticks(sec=1.2, n=10):
 
 
 RULES = [  # (关键词, 音色)
-    (("键盘",), keys), (("滴答",), ticks), (("点击", "鼠标", "开关"), click),
+    (("键盘",), keys), (("滴答",), ticks), (("滚动", "计数"), roll), (("点击", "鼠标", "开关"), click),
     (("呼啸", "散开", "细碎", "分屏"), whoosh), (("上扬", "电流", "描线", "描出", "穿过"), riser),
     (("书写", "马克笔"), scribble), (("纸张", "便签", "收拢"), paper), (("和声",), swell),
     (("低沉", "低频落点"), low_boop), (("程序运行", "电子音"), blips),
@@ -243,11 +257,15 @@ OUT.mkdir(parents=True, exist_ok=True)
 write("music.wav", music * 0.6)
 write("sfx.wav", sfx * 0.8)
 write("vo_guide.wav", vo)
-if os.environ.get("VO_GUIDE", "1") == "0":
-    mix = "[0:a][2:a]amix=inputs=2:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11[out]"
-else:
+USE_VO = os.environ.get("VO_GUIDE", "1") != "0"
+USE_MUSIC = os.environ.get("MUSIC", "1") != "0"
+NORM = "loudnorm=I=-16:TP=-1.5:LRA=11"
+if USE_MUSIC and USE_VO:  # 配乐在旁白提示音处压低
     mix = ("[1:a]asplit=2[vo][sc];[0:a][sc]sidechaincompress=threshold=0.02:ratio=6:attack=30:release=500[duck];"
-           "[duck][vo][2:a]amix=inputs=3:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11[out]")
+           f"[duck][vo][2:a]amix=inputs=3:normalize=0,{NORM}[out]")
+else:
+    used = [i for i, on in ((0, USE_MUSIC), (1, USE_VO), (2, True)) if on]
+    mix = "".join(f"[{i}:a]" for i in used) + (f"amix=inputs={len(used)}:normalize=0," if len(used) > 1 else "") + f"{NORM}[out]"
 subprocess.run([
     "ffmpeg", "-y", "-loglevel", "error",
     "-i", str(OUT / "music.wav"), "-i", str(OUT / "vo_guide.wav"), "-i", str(OUT / "sfx.wav"),
