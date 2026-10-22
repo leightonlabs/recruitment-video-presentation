@@ -1,4 +1,4 @@
-// 一键生成：依赖检查 → 字体 → 分镜校验 → 占位主图 → 逐帧画面 → 临时音轨 → 字幕 → 合成成片。Windows、macOS、Linux 通用。
+// 一键生成：依赖检查 → 字体 → 分镜校验 → 逐帧画面 → 临时音轨 → 字幕 → 合成成片。Windows、macOS、Linux 通用。
 //
 // 用法（在仓库根目录执行）：
 //   node render/build.mjs [并行数]           粗剪：带审阅信息条与旁白提示音，输出 1080p 与 720p 预览版
@@ -46,7 +46,6 @@ console.log(`== ${CLEAN ? '精修版' : '粗剪'}${NO_MUSIC ? '（仅音效）' 
 try {
   fetchFonts(ROOT);
   run(PY, ['tools/storyboard.py', 'check']);
-  run(process.execPath, ['render/render.mjs', 'hero']);
   run(process.execPath, ['render/render.mjs', 'video', String(WORKERS)]);
   run(PY, ['render/audio.py']);
   run(PY, ['tools/storyboard.py', 'srt', `${OUT}/subs.srt`]);

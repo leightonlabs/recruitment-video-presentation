@@ -1,13 +1,16 @@
-// 二维场景：AI 画面占位、主图动画、场景工作台、信息图、岗位卡与片尾。场景签名 fn(ctx, P)，
+// 二维场景：AI 画面占位、场景工作台、信息图、岗位卡与片尾。主图为程序渲染的场站画面（plant.js）。场景签名 fn(ctx, P)，
 // P = { shot, beat, bi, t（镜头内秒）, tb（拍内秒）, bd（拍长）, sd（镜头长） }。
 import {
   C, clamp, lerp, seg, easeOut, easeInOut, rgba, rng, rr, panel, polyPath, drawLine, nodes, dashRect, text, wrap,
   check, cursor, checkbox, hatch, bgNavy, placeImage, imageInRect, centroid, bbox, THEME,
 } from './draw.js';
+import { renderSample, renderSample023, drawPlant } from './plant.js';
 
 export function makeScenes2D(env, S3) {
   const { hero, heroA, story } = env;
   const W = 1920, H = 1080;
+  // 主图为两倍分辨率：HS 为主图像素与屏幕像素之比，HC 为主图中心（主图像素）
+  const HS = hero.width / W, HC = [hero.width / 2, hero.height / 2];
   const shotById = Object.fromEntries(story.shots.map(s => [s.id, s]));
   const textOf = (sid, zone) => (shotById[sid].text.find(x => x.zone === zone) || {}).content || '';
   const scratch = (w = W, h = H) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
@@ -18,32 +21,20 @@ export function makeScenes2D(env, S3) {
   const T = heroA.target, TC = centroid(T);
   const [sx0, sy0, sx1, sy1] = heroA.steam, SC = [(sx0 + sx1) / 2, (sy0 + sy1) / 2];
   const [gx0, gy0, gx1, gy1] = heroA.glare, GC = [(gx0 + gx1) / 2, (gy0 + gy1) / 2];
-  const inSteam = p => p[0] > sx0 - 30 && p[1] > sy0 - 40;
+  const inSteam = p => p[0] > sx0 - 30 * HS && p[1] > sy0 - 40 * HS;
   const PARTIAL = T.map(p => (inSteam(p) ? [lerp(p[0], TC[0], 0.55), lerp(p[1], TC[1], 0.55)] : p)); // 通用模型 / 判断二：漏掉遮挡处
   const EXPANDED = T.map(p => (inSteam(p) ? [TC[0] + (p[0] - TC[0]) * 1.25, TC[1] + (p[1] - TC[1]) * 1.25] : p)); // 判断一：含遮挡区
   const DRAG = T.map((p, i) => [i, Math.hypot(p[0] - PARTIAL[i][0], p[1] - PARTIAL[i][1])]).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
   const mapPts = (m, pts) => pts.map(m);
   const glareRect = m => { const a = m([gx0, gy0]), b = m([gx1, gy1]); return [a[0], a[1], b[0] - a[0], b[1] - a[1]]; };
 
-  // ---------- 同类样本（占位：由主图裁切、调色、加蒸汽或雨痕得到） ----------
-  function makeSample(i, w = 480, h = 270) {
-    const c = scratch(w, h), g = c.getContext('2d'), R = rng(100 + i);
-    const filters = ['none', 'brightness(1.35) contrast(1.1)', 'saturate(.6) brightness(.85)', 'none', 'brightness(.65)', 'sepia(.45) brightness(1.05)', 'hue-rotate(-12deg)', 'contrast(1.2)'];
-    const zooms = [2.6, 2.2, 2.8, 2.4, 3.0, 2.3, 2.7, 3.2];
-    g.save(); if (i % 4 === 3) { g.translate(w, 0); g.scale(-1, 1); }
-    imageInRect(g, hero, { x: 0, y: 0, w, h, r: 0 }, { zoom: zooms[i % 8], focus: [TC[0] + (R() - 0.5) * 120, TC[1] - 60 + (R() - 0.5) * 60], filter: filters[i % 8] });
-    g.restore();
-    if (i % 8 === 2) { g.strokeStyle = 'rgba(200,220,240,.25)'; for (let k = 0; k < 60; k++) { const x = R() * w, y = R() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x - 6, y + 18); g.stroke(); } }
-    if (i % 8 === 3 || i === 23) { for (let k = 0; k < 5; k++) { const x = w * (0.45 + R() * 0.4), y = h * (0.5 + R() * 0.4), r = 40 + R() * 70; const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(235,240,245,.45)'); gr.addColorStop(1, 'rgba(235,240,245,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); } }
-    if (i % 8 === 4) { const gr = g.createRadialGradient(w * 0.5, h * 0.55, 10, w * 0.5, h * 0.55, w * 0.5); gr.addColorStop(0, 'rgba(255,220,160,.25)'); gr.addColorStop(1, 'rgba(0,0,0,.4)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
-    return c;
-  }
-  const samples = Array.from({ length: 8 }, (_, i) => makeSample(i));
-  const sample023 = cached('s023', () => {
-    const c = scratch(), g = c.getContext('2d'); g.save(); g.translate(W, 0); g.scale(-1, 1); g.filter = 'hue-rotate(-10deg) brightness(.95)'; g.drawImage(hero, 0, 0); g.restore();
-    const R = rng(23);
-    for (let k = 0; k < 7; k++) { const x = W - TC[0] + 40 + R() * 160, y = TC[1] + R() * 120, r = 90 + R() * 120; const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(235,240,245,.5)'); gr.addColorStop(1, 'rgba(235,240,245,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
-    return c;
+  // ---------- 同类样本：从场站模型的不同方位、远近与蒸汽量取景 ----------
+  const samples = Array.from({ length: 12 }, (_, i) => renderSample(env.plant, i));
+  const S023 = renderSample023(env.plant), sample023 = S023.canvas;
+  const plantMini = cached('plant-mini', () => {
+    const F = env.plant, c = scratch(480, 270), g = c.getContext('2d');
+    F.setCamera([-18, 12, 32], [2.4, 4.6, -5], 30); F.update({ t: 26, targetMix: 1, steamAmount: 0.5, bright: 2.6 });
+    g.fillStyle = C.term; g.fillRect(0, 0, 480, 270); drawPlant(g, F.render(), 480, 270); return c;
   });
 
   // ---------- AI 视频占位 ----------
@@ -100,47 +91,15 @@ export function makeScenes2D(env, S3) {
   });
 
   // ---------- 主图：压暗、手电光斑、推拉 ----------
-  function heroLit(ctx, { s, dark, light, lightR }) {
-    const m = placeImage(ctx, hero, { s, cx: TC[0], cy: TC[1], sx: TC[0], sy: TC[1] });
-    ctx.fillStyle = `rgba(0,4,10,${dark})`; ctx.fillRect(0, 0, W, H);
-    if (light) {
-      const c = cached('lit', () => scratch()), g = c.getContext('2d');
-      g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, W, H);
-      placeImage(g, hero, { s, cx: TC[0], cy: TC[1], sx: TC[0], sy: TC[1] });
-      g.globalCompositeOperation = 'destination-in';
-      const gr = g.createRadialGradient(light[0], light[1], 0, light[0], light[1], lightR);
-      gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.55, 'rgba(0,0,0,.85)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = gr; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over';
-      ctx.drawImage(c, 0, 0);
-    }
-    return m;
-  }
+  // S13：三块汇合为完整主图，暖色，目标多边形发光，由 1.06 缓拉至 1.00，与片头构图呼应
   function still_reveal(ctx, P) {
-    if (P.shot.id === 'S01') {
-      const k = easeInOut(P.tb / 3), s = 1 + 0.06 * k;
-      const lp = [lerp(W * 0.18, TC[0], k), lerp(H * 0.4, TC[1], k) + Math.sin(P.tb * 3) * 12];
-      heroLit(ctx, { s, dark: 0.64, light: lp, lightR: 380 });
-    } else {
-      const k = easeOut(seg(P.tb, 0, 2.4)), s = lerp(1.06, 1, k);
-      bgNavy(ctx, { dots: false });
-      ctx.save(); ctx.globalAlpha = easeOut(seg(P.tb, 0, 0.35));
-      const m = placeImage(ctx, hero, { s, cx: TC[0], cy: TC[1], sx: TC[0], sy: TC[1] });
-      ctx.fillStyle = 'rgba(255,170,80,.07)'; ctx.fillRect(0, 0, W, H);
-      drawLine(ctx, mapPts(m, T), 1, { close: true, glow: 18 }); nodes(ctx, mapPts(m, T), 9);
-      ctx.restore();
-    }
-  }
-  function mark_target(ctx, P) {
-    const tb = P.tb, open = easeOut(seg(tb, 0, 0.7));
-    const m = heroLit(ctx, { s: 1.06, dark: lerp(0.64, 0.32, open), light: TC, lightR: lerp(380, 1500, open) });
-    const [x, y, w, h] = glareRect(m);
-    dashRect(ctx, x, y, w, h, { alpha: easeOut(seg(tb, 0.1, 0.4)) });
-    const poly = mapPts(m, T);
-    drawLine(ctx, poly, easeInOut(seg(tb, 0.3, 0.9)), { close: true, glow: 14 });
-    if (tb > 0.9) nodes(ctx, poly, 10, C.teal, easeOut(seg(tb, 0.9, 1.1)));
-    const bb = bbox(poly);
-    env.anchors.glare = [x, y - 12];
-    env.anchors.target = [bb[2] + 22, bb[3] - 4];
+    const k = easeOut(seg(P.tb, 0, 2.4)), z = lerp(1.06, 1, k);
+    bgNavy(ctx, { dots: false });
+    ctx.save(); ctx.globalAlpha = easeOut(seg(P.tb, 0, 0.35));
+    const m = imageInRect(ctx, hero, { x: 0, y: 0, w: W, h: H, r: 0 }, { zoom: z, focus: [lerp(TC[0], HC[0], k), lerp(TC[1], HC[1], k)] });
+    ctx.fillStyle = 'rgba(255,170,80,.06)'; ctx.fillRect(0, 0, W, H);
+    drawLine(ctx, mapPts(m, T), 1, { close: true, glow: 18 }); nodes(ctx, mapPts(m, T), 9);
+    ctx.restore();
   }
 
   // ---------- 场景工作台 ----------
@@ -154,7 +113,7 @@ export function makeScenes2D(env, S3) {
     for (let i = 0; i < 6; i++) { rr(ctx, 18, 100 + i * 64, 36, 36, 8); ctx.strokeStyle = i === 1 ? C.edge : 'rgba(255,255,255,.25)'; ctx.lineWidth = 2; ctx.stroke(); }
     panel(ctx, 1420, 100, 460, 900, { fill: C.ui1, r: 12 });
     text(ctx, '类别', 1450, 150, { font: '400 22px NS', color: C.mutedDark });
-    panel(ctx, 1450, 166, 150, 44, { fill: rgba(C.teal, 0.18), r: 22 }); text(ctx, '渗漏锈蚀', 1475, 196, { font: '700 22px NS', color: C.teal });
+    panel(ctx, 1450, 166, 150, 44, { fill: rgba(C.teal, 0.18), r: 22 }); text(ctx, '塔顶阀组', 1475, 196, { font: '700 22px NS', color: C.teal });
     text(ctx, '属性', 1450, 260, { font: '400 22px NS', color: C.mutedDark });
     checkbox(ctx, 1450, 302, '遮挡', checks[0]); checkbox(ctx, 1600, 302, '反光', checks[1]);
     if (layers) {
@@ -182,16 +141,17 @@ export function makeScenes2D(env, S3) {
       const k = easeInOut(seg(tb, 0, 0.48));
       chrome(ctx, k, '边界案例 017');
       const rect = { x: lerp(0, CR.x, k), y: lerp(0, CR.y, k), w: lerp(W, CR.w, k), h: lerp(H, CR.h, k), r: 8 * k };
-      const m = imageInRect(ctx, hero, rect, { zoom: lerp(1.06, 1, k), focus: [lerp(TC[0], 960, k), lerp(TC[1], 540, k)] });
-      ctx.save(); ctx.fillStyle = `rgba(0,4,10,${0.32 * (1 - k)})`; ctx.fillRect(rect.x, rect.y, rect.w, rect.h); ctx.restore();
-      const [x, y, w, h] = glareRect(m); dashRect(ctx, x, y, w, h);
-      drawLine(ctx, mapPts(m, T), 1, { close: true, glow: 12 });
+      // 起点与片头最后一帧完全一致（主图即片头第 5 秒的构图），随后缩入工作台画布
+      const m = imageInRect(ctx, hero, rect, { zoom: 1, focus: HC });
+      const [x, y, w, h] = glareRect(m); dashRect(ctx, x, y, w, h, { width: 2.5 });
+      drawLine(ctx, mapPts(m, T), 1, { close: true, width: 3, glow: 12 }); nodes(ctx, mapPts(m, T), 9);
       return;
     }
     if (key === 'S02:1') {
       chrome(ctx, 1, '边界案例 017');
-      const z = lerp(1, 2.2, easeInOut(seg(tb, 0, 0.45)));
-      const focus = [lerp(960, TC[0], easeInOut(seg(tb, 0, 0.45))), lerp(540, TC[1], easeInOut(seg(tb, 0, 0.45)))];
+      // 推近到目标与反光之间，两处都留在画布内
+      const zk = easeInOut(seg(tb, 0, 0.45)), z = lerp(1, 1.45, zk), MID = [lerp(TC[0], GC[0], 0.45), lerp(TC[1], GC[1], 0.45)];
+      const focus = [lerp(HC[0], MID[0], zk), lerp(HC[1], MID[1], zk)];
       const m = imageInRect(ctx, hero, CR, { zoom: z, focus });
       ctx.save(); rr(ctx, CR.x, CR.y, CR.w, CR.h, 8); ctx.clip();
       const [x, y, w, h] = glareRect(m); dashRect(ctx, x, y, w, h);
@@ -209,7 +169,7 @@ export function makeScenes2D(env, S3) {
       const press = seg(tb, 1.2, 1.45);
       chrome(ctx, 1, '边界案例 017', { button: { label: '加入边界案例', press: tb > 1.2 && tb < 1.5 },
         list: { title: '边界案例', items: [{ label: '案例 015 · 粉尘遮挡' }, { label: '案例 016 · 雨雾' }, { label: '案例 017 · 遮挡与反光', hi: true, alpha: easeOut(seg(tb, 1.3, 1.8)), dy: (1 - easeOut(seg(tb, 1.3, 1.8))) * 60 }] } });
-      const m = imageInRect(ctx, hero, CR, { zoom: 1.15, focus: [(GC[0] + TC[0]) / 2 + 60, (GC[1] + TC[1]) / 2 + 40] });
+      const m = imageInRect(ctx, hero, CR, { zoom: 1.15, focus: [(GC[0] + TC[0]) / 2 + 60 * HS, (GC[1] + TC[1]) / 2 + 40 * HS] });
       ctx.save(); rr(ctx, CR.x, CR.y, CR.w, CR.h, 8); ctx.clip();
       const a = easeOut(seg(tb, 0.2, 0.6));
       const q = (bx, by, bw, bh) => { dashRect(ctx, bx, by, bw, bh, { alpha: a }); text(ctx, '?', bx + bw + 10, by + 36, { font: '900 40px NS', color: C.amber, alpha: a }); };
@@ -225,7 +185,7 @@ export function makeScenes2D(env, S3) {
       const on = tb > 0.6;
       chrome(ctx, 1, '样本 023', { checks: [on, false], badge: { label: '已加入下一版行业数据集', alpha: easeOut(seg(tb, 0.9, 1.2)) } });
       const k = easeOut(seg(tb, 0, 0.35));
-      imageInRect(ctx, sample023, { x: lerp(560, CR.x, k), y: lerp(330, CR.y, k), w: lerp(800, CR.w, k), h: lerp(450, CR.h, k), r: 8 }, { zoom: 1.4, focus: [W - TC[0] + 40, TC[1] - 40] });
+      imageInRect(ctx, sample023, { x: lerp(560, CR.x, k), y: lerp(330, CR.y, k), w: lerp(800, CR.w, k), h: lerp(450, CR.h, k), r: 8 }, { zoom: 1.4, focus: S023.focus });
       const kc = easeInOut(seg(tb, 0.15, 0.55));
       cursor(ctx, lerp(900, 1462, kc), lerp(600, 292, kc), { press: tb > 0.55 && tb < 0.75 ? seg(tb, 0.55, 0.75) : 0 });
       return;
@@ -237,7 +197,7 @@ export function makeScenes2D(env, S3) {
       const show = easeOut(seg(tb, 0.7, 1.1));
       const rect = { x: lerp(CR.x, 0, exp), y: lerp(CR.y, 0, exp), w: lerp(CR.w, W, exp), h: lerp(CR.h, H, exp), r: 8 * (1 - exp) };
       ctx.save(); ctx.globalAlpha = Math.max(show, exp);
-      const m = imageInRect(ctx, hero, rect, { zoom: lerp(1, 1.06, exp), focus: [lerp(960, TC[0], exp), lerp(540, TC[1], exp)] });
+      const m = imageInRect(ctx, hero, rect, { zoom: lerp(1, 1.06, exp), focus: [lerp(HC[0], TC[0], exp), lerp(HC[1], TC[1], exp)] });
       drawLine(ctx, mapPts(m, T), 1, { close: true, glow: 14 }); nodes(ctx, mapPts(m, T), 9);
       ctx.restore();
       const kc = easeInOut(seg(tb, 0.1, 0.55)), cx = lerp(1100, 1620, kc), cy = lerp(700, 772, kc);
@@ -331,12 +291,12 @@ export function makeScenes2D(env, S3) {
       ctx.save(); rr(ctx, s.x, s.y, s.w, s.h, 14); ctx.strokeStyle = act ? 'rgba(255,255,255,.14)' : 'rgba(255,255,255,.06)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
     });
     const s0 = SLOTS[0], s1 = SLOTS[1], s2 = SLOTS[2];
-    { // 图像
-      const fs = 230 / (gx1 - gx0), z = fs / (s0.w / W);
-      const m = imageInRect(ctx, hero, s0, { zoom: z, focus: GC });
-      const [x, y, w, h] = glareRect(m);
+    { // 图像：场站局部，塔顶阀组被矩形框出
+      const tbx = bbox(T), fs = 190 / (tbx[2] - tbx[0]), z = fs / (s0.w / hero.width);
+      const m = imageInRect(ctx, hero, s0, { zoom: z, focus: [TC[0], TC[1] + (tbx[3] - tbx[1]) * 0.55] });
+      const a = m([tbx[0], tbx[1]]), b = m([tbx[2], tbx[3]]), [x, y, w, h] = [a[0] - 12, a[1] - 12, b[0] - a[0] + 24, b[1] - a[1] + 24];
       drawLine(ctx, [[x, y], [x + w, y], [x + w, y + h], [x, y + h]], easeInOut(seg(t, 0.3, 0.9)), { close: true, width: 3 });
-      if (t > 0.9) { panel(ctx, x, y - 40, 104, 34, { fill: C.teal5, r: 4, alpha: easeOut(seg(t, 0.9, 1.1)) }); text(ctx, '压力表', x + 52, y - 15, { font: '700 20px NS', color: C.navy900, align: 'center', alpha: easeOut(seg(t, 0.9, 1.1)) }); }
+      if (t > 0.9) { panel(ctx, x, y - 40, 120, 34, { fill: C.teal5, r: 4, alpha: easeOut(seg(t, 0.9, 1.1)) }); text(ctx, '塔顶阀组', x + 60, y - 15, { font: '700 20px NS', color: C.navy900, align: 'center', alpha: easeOut(seg(t, 0.9, 1.1)) }); }
       check(ctx, s0.x + s0.w - 50, s0.y + s0.h - 46, 40, easeOut(seg(t, 1.4, 1.7)));
     }
     if (t >= 2) { // 语音
@@ -380,8 +340,8 @@ export function makeScenes2D(env, S3) {
   function boundary_compare(ctx, P) {
     bgNavy(ctx);
     const tb = P.tb, rect = { x: 128, y: 210, w: 1080, h: 680, r: 14 };
-    const fs = 420 / (bbox(EXPANDED)[2] - bbox(EXPANDED)[0]), z = fs / (rect.w / W);
-    const m = imageInRect(ctx, hero, rect, { zoom: z, focus: [TC[0] + 20, TC[1] + 10] });
+    const fs = 420 / (bbox(EXPANDED)[2] - bbox(EXPANDED)[0]), z = fs / (rect.w / hero.width);
+    const m = imageInRect(ctx, hero, rect, { zoom: z, focus: [TC[0] + 20 * HS, TC[1] + 10 * HS] });
     const A = mapPts(m, EXPANDED), B = mapPts(m, PARTIAL);
     ctx.save(); rr(ctx, rect.x, rect.y, rect.w, rect.h, 14); ctx.clip();
     const ha = easeOut(seg(tb, 0.7, 1.0));
@@ -436,7 +396,7 @@ export function makeScenes2D(env, S3) {
     const fixes = [2, 7, 9];
     for (let i = 0; i < 12; i++) {
       const c = i % 4, r = Math.floor(i / 4), x = x0 + c * (w + gap), y = y0 + r * (h + gap);
-      ctx.save(); rr(ctx, x, y, w, h, 10); ctx.clip(); ctx.drawImage(samples[(i * 3) % 8], x, y, w, h); ctx.restore();
+      ctx.save(); rr(ctx, x, y, w, h, 10); ctx.clip(); ctx.drawImage(samples[i], x, y, w, h); ctx.restore();
       const done = scan > (r + 0.5) / 3;
       if (done) {
         const tDone = 0.1 + 1.2 * ((r + 0.5) / 3), fix = fixes.includes(i), ok = !fix || tb > tDone + 0.3;
@@ -550,7 +510,7 @@ export function makeScenes2D(env, S3) {
       ctx.save(); ctx.globalAlpha = a;
       const m = imageInRect(ctx, hero, s, { zoom: z, focus });
       ctx.save(); rr(ctx, s.x, s.y, s.w, s.h, 14); ctx.clip();
-      if (i === 0) { const [x, y, w, h] = glareRect(m); dashRect(ctx, x, y, w, h, { width: 3 }); text(ctx, '渗漏？', x, y - 10, { font: '700 20px NS', color: C.amber }); }
+      if (i === 0) { const [x, y, w, h] = glareRect(m); dashRect(ctx, x, y, w, h, { width: 3 }); text(ctx, '异常？', x, y - 10, { font: '700 20px NS', color: C.amber }); }
       else drawLine(ctx, mapPts(m, T), 1, { close: true, width: 3, glow: 8 });
       ctx.restore();
       if (i === 2) check(ctx, s.x + s.w - 54, s.y + s.h - 50, 46, easeOut(seg(tb, 1.6, 1.9)));
@@ -607,7 +567,7 @@ export function makeScenes2D(env, S3) {
   const CARDS = [128, 558, 988, 1418];
   function cardVisual(ctx, i, x, y, w, h) {
     if (i === 0) for (let k = 0; k < 6; k++) ctx.drawImage(samples[k], x + (k % 3) * (w / 3), y + Math.floor(k / 3) * (h / 2), w / 3 - 6, h / 2 - 6);
-    if (i === 1) { const R = rng(4); ctx.fillStyle = '#3b82a0'; for (let k = 0; k < 900; k++) { const u = R(); const px = x + R() * w, py = u < 0.6 ? y + h * 0.5 + (R() - 0.5) * h * 0.3 : y + R() * h; if (u < 0.6 || Math.abs(px - (x + w / 2)) < 18) ctx.fillRect(px, py, 2, 2); } ctx.fillStyle = C.amber; for (let k = 0; k < 80; k++) ctx.fillRect(x + w / 2 + (R() - 0.5) * 30, y + h * 0.66 + (R() - 0.5) * 24, 2, 2); }
+    if (i === 1) ctx.drawImage(plantMini, x, y, w, h);
     if (i === 2) { ctx.fillStyle = C.term; ctx.fillRect(x, y, w, h); [[C.muted, 0.6], [C.teal, 0.8], ['#cbd5e1', 0.5], [C.amber, 0.4], ['#cbd5e1', 0.7]].forEach(([c, l], k) => { ctx.fillStyle = c; ctx.fillRect(x + 16, y + 20 + k * 34, (w - 32) * l, 12); }); }
     if (i === 3) { ctx.fillStyle = C.paper; ctx.fillRect(x + 40, y, w - 80, h); ctx.fillStyle = '#e2e8f0'; for (let k = 0; k < 4; k++) ctx.fillRect(x + 60, y + 20 + k * 22, w - 140 - k * 20, 8); ctx.drawImage(caseThumb, x + 70, y + 110, 170, 80); }
   }
@@ -655,8 +615,8 @@ export function makeScenes2D(env, S3) {
     terminal: () => cached('th-term', () => { const c = scratch(); validate_terminal(c.getContext('2d'), { tb: 2.6 }); return c; }),
     board: () => cached('th-board', () => { const c = scratch(); whiteboard_flow(c.getContext('2d'), { tb: 2.2 }); return c; }),
     task: () => cached('th-task', () => { const c = scratch(); task_board(c.getContext('2d'), { tb: 3 }); return c; }),
-    cloud: tb => { const c = cached('th-cloud', () => scratch()), g = c.getContext('2d'); bgNavy(g, { dots: false }); g.drawImage(S3.thumb.pointcloud(tb), 0, 0); return c; },
-    multi: tb => { const c = cached('th-multi', () => scratch()), g = c.getContext('2d'); bgNavy(g, { dots: false }); if (THEME.vibrant) S3.thumb.views.forEach(v => panel(g, v[0], v[1], v[2], v[3], { r: 8 })); g.drawImage(S3.thumb.multi(tb), 0, 0); return c; },
+    cloud: tb => { const c = cached('th-cloud', () => scratch()), g = c.getContext('2d'); bgNavy(g, { dots: false }); drawPlant(g, S3.thumb.pointcloud(tb)); return c; },
+    multi: tb => { const c = cached('th-multi', () => scratch()), g = c.getContext('2d'); bgNavy(g, { dots: false }); if (THEME.vibrant) S3.thumb.views.forEach(v => panel(g, v[0], v[1], v[2], v[3], { r: 8 })); drawPlant(g, S3.thumb.multi(tb)); return c; },
   };
   const TILES = [[80, 70], [980, 70], [80, 560], [980, 560]];
   function drawGrid(ctx, a = 1, labels = null) {
@@ -875,7 +835,7 @@ export function makeScenes2D(env, S3) {
   function missing(ctx, P) { bgNavy(ctx); text(ctx, `缺少场景：${P.scene}`, 960, 540, { font: '700 48px NS', color: C.amber, align: 'center' }); }
 
   return {
-    plate, still_reveal, mark_target, scene_workbench, brand_card, pilot_cities, pilot_facts, scenario_tiles,
+    plate, still_reveal, scene_workbench, brand_card, pilot_cities, pilot_facts, scenario_tiles,
     modality_triptych, boundary_compare, spec_doc, recheck_grid, flow_nodes, validate_terminal,
     whiteboard_flow: (ctx, P) => whiteboard_flow(ctx, P), experiment_log, layer_compare, paper_spec_insert, task_board,
     deliverables, growth_path, role_grid, recruit_total, job_card_pair, job_card, apply_flow, slogan_finale, end_card, missing,

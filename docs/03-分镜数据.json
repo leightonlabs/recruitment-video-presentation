@@ -127,50 +127,15 @@
   },
   "hero_sample": {
     "id": "边界案例 017",
-    "object": "煤化工装置区一段水平工艺管道的法兰连接处：左侧短立管上有圆形压力表，右后方有红色阀门手轮。",
-    "target": "法兰下沿的锈蚀与渗漏水痕（类别：渗漏锈蚀）。",
-    "model_error": "通用模型把压力表玻璃的反光误判为渗漏，并漏检被蒸汽遮挡的锈蚀边缘。",
-    "ambiguities": ["遮挡：一缕白色蒸汽挡住锈迹右下边缘，边界看不清，通用模型在此漏检。", "反光：压力表玻璃强反光，通用模型将其误判为渗漏。"],
-    "rule_1_3": ["被蒸汽遮挡的部分按可见轮廓外推，并勾选“遮挡”属性。", "表盘玻璃反光区域不计入目标。"],
-    "polygon": null,
-    "target_region_hint": [0.45, 0.55, 0.62, 0.72],
-    "glare_region_hint": [0.28, 0.3, 0.4, 0.48],
-    "polygon_note": "polygon 为 IMG_HERO 归一化坐标的顶点数组；主图定稿后读图标定并写入，标定前渲染使用 target_region_hint 与 glare_region_hint（x0, y0, x1, y1）。",
-    "pointcloud": "程序生成同构点云：管道、双法兰与 8 颗螺栓、压力表立管、阀门手轮；目标点在下沿。若公司提供可公开 .ply / .pcd / .las 文件，直接替换。",
+    "object": "程序生成的数字孪生能源场站（夜景光点模型）：双曲面冷却塔、三座精馏塔、球罐、烟囱、钢结构与输煤栈桥。",
+    "target": "最高精馏塔塔顶平台上的阀组（类别：塔顶阀组）。",
+    "model_error": "通用模型把球罐表面的反光误判为异常，并漏检被蒸汽遮住的阀组右侧部分。",
+    "ambiguities": ["遮挡：阀组旁的一股蒸汽挡住阀组右侧，边界看不清，通用模型在此漏检。", "反光：球罐表面有一处强反光，通用模型将其误判为异常。"],
+    "rule_1_3": ["被蒸汽遮挡的部分按可见轮廓外推，并勾选“遮挡”属性。", "设备表面的反光区域不计入目标。"],
+    "model": "render/facility.js 的 FACILITY：目标包围盒 targetBox、反光点 glare、蒸汽源 vent；主图为片头第 5 秒构图的两倍分辨率渲染，目标多边形、反光框与遮挡区域由模型投影得到（render/plant.js）。",
     "story": "S01 通用模型误判 → S02 对照现场修正边界 → S07 出现两种判断 → S08 写入场景应用规范 1.3 版 → S09 进入三维场景 → S11 场景校验找出同类漏检样本 023 → S12 对照实验 → S13 适配后模型通过现场验证 → S14 带教讲解 → S16 归档 → S23 被下一位同事复用。"
   },
   "assets": {
-    "IMG_HERO": {
-      "kind": "image",
-      "route": "I",
-      "required": true,
-      "output": "3840×2160（至少 2560×1440），16:9",
-      "prompt_en": "Photorealistic close-up photograph of industrial piping at a coal-chemical plant at night. A horizontal steel process pipe crosses the frame; in the exact center is a bolted flange joint with eight hex bolts. A brown rust streak and a wet leak trace run down from the lower edge of the flange. A thin wisp of white steam drifts across the lower right part of the flange and partly hides the edge of the rust. On the left, a round analog pressure gauge sits on a short vertical pipe; its glass face shows a strong specular glare that hides the dial markings. On the right, slightly behind, a red valve handwheel. Background: out-of-focus pipe racks and a few small amber lights in deep navy darkness. One warm work light from the upper left, cool blue ambient light. Camera at flange height, 50mm lens, f/2.8, crisp metal texture, no people.",
-      "prompt_zh": "写实特写照片：夜间煤化工装置区的工业管道。一根水平钢制工艺管道横穿画面，画面正中是带8颗六角螺栓的法兰连接处，法兰下沿有一道褐色锈迹和潮湿的渗漏水痕向下延伸。一缕淡白色蒸汽飘过法兰右下方，挡住锈迹边缘的一部分。左侧短立管上有一个圆形指针压力表，表盘玻璃有强烈反光，看不清刻度。右后方有一个红色阀门手轮。背景是虚化的管廊和几盏琥珀色小灯，整体处于深海军蓝的暗环境。左上方一盏暖色工作灯，环境光偏冷蓝。机位与法兰同高，50mm镜头，f/2.8，金属质感清晰，无人物。",
-      "negative_extra_en": "readable gauge numbers, labels on pipes, warning signs, people",
-      "negative_extra_zh": "可读的表盘数字、管道标签、警示牌、人物",
-      "acceptance": [
-        "锈迹与渗漏区域位于画面中央（约 x 45–62%，y 55–72%），在 9:16 中央裁切内完整可见。",
-        "蒸汽只遮住锈迹边缘的一部分，目标仍可辨认。",
-        "压力表反光明显，表盘无可读数字；画面中没有任何文字、标签或标牌。",
-        "法兰、螺栓、立管、手轮结构合理，没有融化或错位的金属件。"
-      ],
-      "after_generation": "定稿后读图标定目标多边形，写入 hero_sample.polygon；同时标定压力表与反光区域的矩形，供 S01、S04、S05、S11 使用。",
-      "replace_with_R": "公司可公开的同类设备实拍照片（≥3840×2160，无人员、无标识、无涉密信息）。"
-    },
-    "IMG_SAMPLES": {
-      "kind": "image",
-      "route": "I",
-      "required": false,
-      "output": "6–8 张，2048×1152，16:9",
-      "prompt_en": "Photorealistic close-up photograph of a bolted steel flange joint on an industrial pipe with a small rust stain near its lower edge. Variation: {daylight with hard shadows | light rain and wet metal | steam partly covering the joint | dim night light with a flashlight spot | dusty surface | fresh paint with a thin rust line}. Centered composition, 50mm lens, no people.",
-      "prompt_zh": "写实特写照片：工业管道上带螺栓的钢制法兰连接处，下沿附近有一小块锈迹。变化条件依次为：{强烈日光与硬阴影｜小雨、金属表面潮湿｜蒸汽遮挡部分连接处｜夜间弱光与手电光斑｜表面积尘｜新漆面上的一道细锈线}。主体居中，50mm镜头，无人物。",
-      "negative_extra_en": "readable labels, warning signs, people",
-      "negative_extra_zh": "可读标签、警示牌、人物",
-      "acceptance": ["每张都能看出法兰与锈迹，且彼此的光线条件明显不同。", "没有文字、标签和人物。"],
-      "fallback": "用 IMG_HERO 的不同裁切、镜像和曝光变化代替。",
-      "replace_with_R": "公司可公开的同类样本图片（去除敏感信息）。"
-    },
     "V_EYE": {
       "kind": "video",
       "route": "A",
@@ -304,12 +269,12 @@
       "end": 5,
       "purpose": "第一秒给出具体对象和问题：通用模型在工业现场会看错。",
       "beats": [
-        { "t": [0, 3.0], "src": "I", "asset": "IMG_HERO", "scene": "still_reveal", "do": "主图压暗 1.5 EV；手电光斑从 (0.18, 0.40) 缓移到目标中心；画面以目标为中心由 1.00 缓推至 1.06。" },
-        { "t": [3.0, 5.0], "src": "G", "scene": "mark_target", "asset": "IMG_HERO", "do": "画面定格并提亮到 −0.8 EV；琥珀色虚线框落在压力表反光上，标为通用模型的误判；随后青色多边形沿真正的锈蚀边界描出（0.6 秒），顶点方块弹出。" }
+        { "t": [0, 3.0], "src": "G", "scene": "plant_reveal", "do": "夜色中，扫描光面从左到右扫过，数字孪生能源场站由光点逐渐显现：冷却塔、精馏塔、球罐、烟囱、钢结构与输煤栈桥，冷却塔蒸汽缓缓飘散；镜头从远处缓慢推近。" },
+        { "t": [3.0, 5.0], "src": "G", "scene": "plant_perceive", "do": "设备按从左到右的顺序被一道光波依次点亮（AI 逐台识别）；0.25 秒起琥珀色虚线框落在球罐反光上，标为通用模型的误判；0.45 秒起青色多边形沿被蒸汽遮住一部分的塔顶阀组边界描出（0.5 秒），顶点方块弹出。" }
       ],
       "text": [
         { "t": [0.8, 4.8], "style": "h1", "zone": "lower-third", "content": "AI，怎样看懂真实世界？" },
-        { "t": [3.1, 4.9], "style": "tag", "zone": "anchor:glare", "content": "通用模型：渗漏？" },
+        { "t": [3.35, 4.9], "style": "tag", "zone": "anchor:glare", "content": "通用模型：异常？" },
         { "t": [3.5, 5.0], "style": "tag", "zone": "anchor:target", "content": "边界案例 017" },
         { "t": [0, 4.8], "style": "notice", "zone": "bottom-left", "content": "本片部分画面由AI生成，仅作工作场景示意" }
       ],
@@ -317,12 +282,13 @@
       "subtitle": false,
       "audio": [
         { "t": 0.0, "cue": "装置区低频环境声淡入" },
-        { "t": 0.3, "cue": "手电开关声" },
-        { "t": 3.1, "cue": "误判框出现时一声低沉提示" },
-        { "t": 3.5, "cue": "青色描线的细微电流声" }
+        { "t": 0.15, "cue": "扫描光面扫过的上扬音" },
+        { "t": 3.05, "cue": "设备逐台识别的短促电子音" },
+        { "t": 3.25, "cue": "误判框出现时一声低沉提示" },
+        { "t": 3.45, "cue": "青色描线的细微电流声" }
       ],
       "transition_out": "zoom_into_ui：整幅画面连同两层框线缩入 S02 场景工作台的画布区。",
-      "vertical": "以目标为中心裁切；标题移到 top_y，提示语置底。"
+      "vertical": "以场站中部为中心裁切，塔顶阀组保持在画面内；标题移到 top_y，提示语置底。"
     },
     {
       "id": "S02",
@@ -331,8 +297,8 @@
       "end": 10,
       "purpose": "看清问题：通用模型的输出与现场实际不一致。",
       "beats": [
-        { "t": [0, 0.48], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "承接 S01：画面缩小进入场景工作台的画布，界面框架从四周淡入。" },
-        { "t": [0.48, 3.0], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "画布叠两层：琥珀色为通用模型输出（框在反光上、漏掉遮挡处），青色为现场复核；光标拖动第 3、第 5 个顶点修正边界；右侧面板显示类别“渗漏锈蚀”，属性“遮挡”“反光”未勾选。" },
+        { "t": [0, 0.48], "src": "G", "scene": "scene_workbench", "do": "承接 S01：片头最后一帧（场站主图）连同两层框线缩小进入场景工作台的画布，界面框架从四周淡入。" },
+        { "t": [0.48, 3.0], "src": "G", "scene": "scene_workbench", "do": "画布推近到阀组与球罐之间，叠两层：琥珀色为通用模型输出（框在反光上、漏掉蒸汽遮挡处），青色为现场复核；光标拖动被遮挡一侧的两个顶点修正边界；右侧面板显示类别“塔顶阀组”，属性“遮挡”“反光”未勾选。" },
         { "t": [3.0, 5.0], "src": "A", "asset": "V_EYE", "do": "眼部特写，屏幕光映在虹膜上。" }
       ],
       "text": [
@@ -443,7 +409,7 @@
       "end": 37,
       "purpose": "三类行业数据各给一个看得懂的动作：为模型备好数据。",
       "beats": [
-        { "t": [0, 2.0], "src": "G", "scene": "modality_triptych", "asset": "IMG_HERO", "do": "图像：主图压力表局部，矩形框描出并标“压力表”，青色确认勾出现。" },
+        { "t": [0, 2.0], "src": "G", "scene": "modality_triptych", "do": "图像：场站主图的塔顶局部，矩形框描出阀组并标“塔顶阀组”，青色确认勾出现。" },
         { "t": [2.0, 4.0], "src": "G", "scene": "modality_triptych", "do": "语音：程序生成波形，播放头扫过，转写“二号皮带机 托棍温度偏高”中的“托棍”被改为“托辊”，确认勾出现。" },
         { "t": [4.0, 6.0], "src": "G", "scene": "modality_triptych", "do": "文本：巡检记录“2号皮带机托辊温度偏高，建议停机检查。”中的设备、异常、处置三类信息被抽取高亮；5.0 秒起三块画面缩为一排，以青色线相连。" }
       ],
@@ -477,9 +443,9 @@
       "end": 43,
       "purpose": "把“认真”拍成遇到模糊边界时的具体做法。",
       "beats": [
-        { "t": [0, 2.2], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "放大到目标：蒸汽区与表盘反光区各出现琥珀色虚线框和问号；光标点击“加入边界案例”，案例卡滑入右侧列表。" },
+        { "t": [0, 2.2], "src": "G", "scene": "scene_workbench", "do": "放大到目标：阀组旁的蒸汽区与球罐反光区各出现琥珀色虚线框和问号；光标点击“加入边界案例”，案例卡滑入右侧列表。" },
         { "t": [2.2, 4.2], "src": "A", "asset": "V_PAIR_DISCUSS", "do": "两位同事对照讨论并翻阅规范。" },
-        { "t": [4.2, 6.0], "src": "G", "scene": "boundary_compare", "asset": "IMG_HERO", "do": "目标局部上叠加两种判断：判断一（青色，含蒸汽遮挡区）与判断二（琥珀色，不含）；差异区域斜线填充；右侧滑入场景规范片段。" }
+        { "t": [4.2, 6.0], "src": "G", "scene": "boundary_compare", "do": "阀组局部上叠加两种判断：判断一（青色，含蒸汽遮挡区）与判断二（琥珀色，不含）；差异区域斜线填充；右侧滑入场景规范片段。" }
       ],
       "text": [
         { "t": [0.3, 2.1], "style": "label", "zone": "top-left", "content": "边界案例｜规则对齐" },
@@ -503,8 +469,8 @@
       "end": 49,
       "purpose": "一次判断变成可复用、可迁移的规范，并被批量执行。",
       "beats": [
-        { "t": [0, 2.8], "src": "G", "scene": "spec_doc", "asset": "IMG_HERO", "do": "浅色规范页“场景应用规范 1.3 版”，新增条款 3.4 逐行显现；案例 017 缩略图落入页面，多边形与上一镜形状匹配。" },
-        { "t": [2.8, 4.4], "src": "G", "scene": "recheck_grid", "asset": "IMG_SAMPLES", "do": "12 张同类样本缩略图，青色扫描线逐行经过：9 张显示“符合 1.3 版”，3 张琥珀色“按 1.3 版修正”后转为通过。" },
+        { "t": [0, 2.8], "src": "G", "scene": "spec_doc", "do": "浅色规范页“场景应用规范 1.3 版”，新增条款 3.4 逐行显现；案例 017 缩略图（场站塔顶阀组）落入页面，多边形与上一镜形状匹配。" },
+        { "t": [2.8, 4.4], "src": "G", "scene": "recheck_grid", "do": "12 张同类样本缩略图（从场站模型的三座精馏塔塔顶、不同方位、远近与蒸汽量下取景），青色扫描线逐行经过：9 张显示“符合 1.3 版”，3 张琥珀色“按 1.3 版修正”后转为通过。" },
         { "t": [4.4, 6.0], "src": "G", "scene": "flow_nodes", "do": "三个节点“数据配套 → 模型验证 → 规范迭代”由青色线连接，回环箭头指回起点；下方出现复核标签。" }
       ],
       "text": [
@@ -529,12 +495,12 @@
       "purpose": "从二维进入三维，展示场景建模的工作对象。",
       "beats": [
         { "t": [0, 1.6], "src": "A", "asset": "V_3D_OVER_SHOULDER", "optional": true, "do": "肩后看工程师操作点云（可选）。" },
-        { "t": [1.6, 2.8], "src": "G", "scene": "image_to_particles", "asset": "IMG_HERO", "do": "主图按像素采样为约 6 万个粒子，粒子获得深度并飞向程序点云的对应位置。" },
-        { "t": [2.8, 6.0], "src": "G", "scene": "pointcloud", "do": "围绕法兰环绕 20°；目标点在 3.0–3.6 秒变为琥珀色；3.6–4.2 秒描出青色三维框；左下角坐标轴；主体位于画面中右，避开标题区。" }
+        { "t": [1.6, 2.8], "src": "G", "scene": "image_to_particles", "do": "场站主图沿一道扫描线化为光点；光点先贴在画面所在的平面上，随后恢复真实深度，镜头开始环绕。" },
+        { "t": [2.8, 6.0], "src": "G", "scene": "pointcloud", "do": "围绕最高精馏塔环绕约 20°；塔顶阀组的光点在 3.0–3.6 秒变为琥珀色；3.6–4.1 秒描出青色三维框；左下角坐标轴；主体位于画面中右，避开标题区。" }
       ],
       "text": [
         { "t": [1.8, 5.8], "style": "label", "zone": "top-left", "content": "三维点云｜场景分割｜目标框定" },
-        { "t": [4.2, 6.0], "style": "tag", "zone": "anchor:box3d", "content": "目标框定 · 渗漏锈蚀" }
+        { "t": [4.2, 6.0], "style": "tag", "zone": "anchor:box3d", "content": "目标框定 · 塔顶阀组" }
       ],
       "vo": { "text": "从二维图像，到三维场景，还原工业现场的空间关系。", "t": [0.3, 5.4] },
       "subtitle": true,
@@ -552,7 +518,7 @@
       "end": 61,
       "purpose": "三维场景服务模型输入：目标在场景中有确定的位置。",
       "beats": [
-        { "t": [0, 3.0], "src": "G", "scene": "pointcloud_scene", "do": "从法兰后拉：管廊支架、更多管道、储罐与楼梯按距离依次生长出来；目标三维框始终高亮。" },
+        { "t": [0, 3.0], "src": "G", "scene": "pointcloud_scene", "do": "从精馏塔后拉到全景：场站以塔顶阀组为中心由近及远依次显现；目标三维框始终高亮。" },
         { "t": [3.0, 6.0], "src": "G", "scene": "multi_view", "do": "画面分为主视、俯视、三维三个视图，同一目标在三处同时高亮，以青色引线相连。" }
       ],
       "text": [
@@ -576,7 +542,7 @@
       "beats": [
         { "t": [0, 1.2], "src": "A", "asset": "V_CODER_HANDS", "do": "敲键盘，点击鼠标。" },
         { "t": [1.2, 4.4], "src": "G", "scene": "validate_terminal", "do": "深色编辑器显示 3 行示意代码并运行场景校验；结果表中多数场景以灰色显示通过，只有“蒸汽遮挡”一行以琥珀色突出：样本 023 漏检，待补充同类数据。" },
-        { "t": [4.4, 6.0], "src": "G", "scene": "scene_workbench", "asset": "IMG_SAMPLES", "do": "点击该行，画面推入场景工作台打开样本 023；按 1.3 版补勾“遮挡”属性，并加入下一版行业数据集。" }
+        { "t": [4.4, 6.0], "src": "G", "scene": "scene_workbench", "do": "点击该行，画面推入场景工作台打开样本 023（塔的另一侧，蒸汽遮住阀组大半）；按 1.3 版补勾“遮挡”属性，并加入下一版行业数据集。" }
       ],
       "text": [
         { "t": [0.3, 5.8], "style": "label", "zone": "top-left", "content": "算法研发｜行业模型适配优化" },
@@ -625,8 +591,8 @@
       "end": 79,
       "purpose": "通用模型、适配后模型与现场复核放在一起，回到现场形成闭环：完成 FDE 行业适配，模型真正可用。",
       "beats": [
-        { "t": [0, 3.6], "src": "G", "scene": "layer_compare", "asset": "IMG_HERO", "do": "左中右三块：通用模型（框在反光上、漏掉遮挡处）、适配后模型（覆盖真实锈蚀边界）、现场复核（确认勾）；青色线从左向右穿过。" },
-        { "t": [3.6, 6.0], "src": "I", "asset": "IMG_HERO", "scene": "still_reveal", "do": "三块汇合为完整主图，正常曝光、暖色；多边形发光；由 1.06 缓拉至 1.00，与 S01 构图呼应。" }
+        { "t": [0, 3.6], "src": "G", "scene": "layer_compare", "do": "左中右三块场站局部：通用模型（框在反光上、漏掉遮挡处）、适配后模型（覆盖阀组真实边界）、现场复核（确认勾）；青色线从左向右穿过。" },
+        { "t": [3.6, 6.0], "src": "G", "scene": "still_reveal", "do": "三块汇合为完整的场站主图，暖色；阀组多边形发光；由 1.06 缓拉至 1.00，与 S01 构图呼应。" }
       ],
       "text": [
         { "t": [0.3, 3.5], "style": "tag", "zone": "panels", "content": "通用模型｜适配后模型｜现场复核" },
@@ -692,7 +658,7 @@
       "end": 97,
       "purpose": "用交付物表达完整 FDE 技术栈的积累，以及“看落地效果、看交付节点”的评价方式。",
       "beats": [
-        { "t": [0, 4.2], "src": "G", "scene": "deliverables", "asset": "IMG_SAMPLES", "do": "顶部标题“完整FDE技术栈积累”；四张成果卡每隔 0.8 秒叠加出现并保持：行业数据集 1.3 版（样本缩略图）、三维场景文件（小点云）、场景校验脚本（代码片段）、场景应用规范 1.3 版 · 案例 017（文档页）。" },
+        { "t": [0, 4.2], "src": "G", "scene": "deliverables", "do": "顶部标题“完整FDE技术栈积累”；四张成果卡每隔 0.8 秒叠加出现并保持：行业数据集 1.3 版（样本缩略图）、三维场景文件（小点云）、场景校验脚本（代码片段）、场景应用规范 1.3 版 · 案例 017（文档页）。" },
         { "t": [4.2, 6.0], "src": "G", "scene": "deliverables", "do": "四张卡飞入“项目归档”目录树，三条评价标签依次出现。" }
       ],
       "text": [
@@ -865,7 +831,7 @@
       "end": 143,
       "purpose": "标准被下一位同事复用，回到人。",
       "beats": [
-        { "t": [0, 2.4], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "带“新同事”标签的光标打开“场景应用规范 1.3 版 › 案例 017”；主图与适配后模型的框线出现，构图与 S01 定格一致。" },
+        { "t": [0, 2.4], "src": "G", "scene": "scene_workbench", "do": "带“新同事”标签的光标打开“场景应用规范 1.3 版 › 案例 017”；场站主图与适配后模型的框线出现，构图与 S01 定格一致。" },
         { "t": [2.4, 5.0], "src": "G", "scene": "slogan_finale", "do": "代码动画：“2027”逐位滚动落定并扩散两圈光环，标语逐字由虚到实浮现；光点从四周汇聚成关键词下方的光线，线上光点流动，最后光线向右延伸出画，接 S24 同一高度的线。" }
       ],
       "text": [

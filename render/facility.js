@@ -158,17 +158,27 @@ export function makeFacility({ W = 1920, H = 1080 } = {}) {
     uTargetMix: { value: 0 }, uTargetCol: { value: new THREE.Color(1.0, 0.69, 0.13) },
     uGlare: { value: 1 }, uFogNear: { value: 20 }, uFogFar: { value: 70 }, uBright: { value: 1 },
     uUnit: { value: new Array(16).fill(0) },
+    // 压平：把光点沿“镜头→光点”的射线挪到过 uFlatP、法线 uFlatN 的平面上，从拍摄机位看投影不变（用于“二维图像→三维场景”）
+    uFlat: { value: 0 }, uFlatC: { value: new THREE.Vector3() }, uFlatP: { value: new THREE.Vector3() }, uFlatN: { value: new THREE.Vector3(0, 0, 1) },
+    // 由近及远显现：只显示与 uRevC 距离小于 uRevR 的光点
+    uRevC: { value: new THREE.Vector3() }, uRevR: { value: 999 },
   };
   const VERT = `
     attribute vec3 color; attribute float size; attribute float kind; attribute float unit;
     uniform float uPix, uScan, uScanW, uTime, uTargetMix, uGlare, uFogNear, uFogFar, uBright; uniform vec3 uTargetCol;
     uniform float uUnit[16];
+    uniform float uFlat, uRevR; uniform vec3 uFlatC, uFlatP, uFlatN, uRevC;
     varying vec3 vCol; varying float vA;
     void main() {
-      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      vec3 p = position;
+      if (uFlat > 0.0) {
+        float dn = max(dot(p - uFlatC, uFlatN), 0.1);
+        p = mix(p, uFlatC + (p - uFlatC) * (dot(uFlatP - uFlatC, uFlatN) / dn), uFlat);
+      }
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
       float d = max(0.1, -mv.z);
       float front = position.x - uScan;
-      float vis = 1.0 - smoothstep(-0.05, 0.25, front);
+      float vis = (1.0 - smoothstep(-0.05, 0.25, front)) * (1.0 - smoothstep(uRevR - 1.5, uRevR, distance(position, uRevC)));
       float band = exp(-pow(front / uScanW, 2.0)) * step(front, 0.6) * step(kind, 4.5); // 蒸汽不受扫描光带提亮
       float fog = clamp(1.0 - (d - uFogNear) / (uFogFar - uFogNear), 0.12, 1.0);
       vec3 col = color;
@@ -245,8 +255,17 @@ export function makeFacility({ W = 1920, H = 1080 } = {}) {
     uniforms.uPix.value = H / (2 * Math.tan(THREE.MathUtils.degToRad(fov / 2)));
   }
   // units：各设备的点亮程度（下标见上方 unit 编号：1–2 冷却塔，3–5 精馏塔，6–8 球罐，9 烟囱，10 钢结构，11 栈桥，12 输电塔）
-  function update({ t = 0, scan = 99, scanGlow = 0, steamAmount = 1, targetMix = 0, glare = 1, bright = 1, fog = [20, 70], units = [] } = {}) {
+  function update({ t = 0, scan = 99, scanGlow = 0, steamAmount = 1, targetMix = 0, glare = 1, bright = 1, fog = [20, 70], units = [],
+    flat = 0, flatCam = null, flatAt = FACILITY.target, reveal = null } = {}) {
     const u = uniforms.uUnit.value; for (let i = 0; i < 16; i++) u[i] = units[i] || 0;
+    uniforms.uFlat.value = flat;
+    if (flat > 0 && flatCam) {
+      uniforms.uFlatC.value.copy(flatCam.position);
+      uniforms.uFlatN.value.set(0, 0, -1).applyQuaternion(flatCam.quaternion);
+      uniforms.uFlatP.value.set(...flatAt);
+    }
+    uniforms.uRevR.value = reveal ? reveal.r : 999;
+    if (reveal) uniforms.uRevC.value.set(...reveal.c);
     uniforms.uTime.value = t; uniforms.uScan.value = scan; uniforms.uTargetMix.value = targetMix; uniforms.uGlare.value = glare;
     uniforms.uBright.value = bright; uniforms.uFogNear.value = fog[0]; uniforms.uFogFar.value = fog[1];
     planeGroup.position.x = scan; planeMat.uniforms.uA.value = scanGlow; planeGroup.visible = scanGlow > 0.001;
@@ -277,6 +296,8 @@ export function makeFacility({ W = 1920, H = 1080 } = {}) {
     const c = new THREE.OrthographicCamera(-half[0], half[0], half[1], -half[1], 0.1, 200);
     c.position.set(look[0] + dir[0] * 60, look[1] + dir[1] * 60, look[2] + dir[2] * 60); c.up.set(...up); c.lookAt(...look); c.updateMatrixWorld(); return c;
   };
+  const setPix = () => { uniforms.uPix.value = H / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2))); };
   const clear = () => { renderer.setScissorTest(false); renderer.setViewport(0, 0, W, H); renderer.setClearColor(0, 0); renderer.clear(); };
-  return { canvas, cam, setCamera, update, render, clear, project, projectBox, ortho, count: N + SN, THREE };
+  const dispose = () => { geo.dispose(); sGeo.dispose(); mat.dispose(); renderer.dispose(); renderer.forceContextLoss(); };
+  return { canvas, cam, setCamera, setPix, update, render, clear, dispose, project, projectBox, ortho, count: N + SN, THREE };
 }

@@ -1,25 +1,27 @@
 // 粗剪主程序：读取分镜数据，按全片时间找到镜头与拍，调用对应场景绘制画面，并按 text 字段排版文字层。
 import { makeScenes2D } from './scenes2d.js';
 import { makeScenes3D } from './scenes3d.js';
+import { makeFacility } from './facility.js';
+import { makePlantHero } from './plant.js';
 import { seg, easeOut, applyTheme, setNow, THEME } from './draw.js';
 
 const getJSON = async url => (await fetch(url)).json();
-const loadImage = url => new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = url; });
 
 // 主题：?theme=vibrant（默认，动感科技蓝）或 classic（原深蓝纯色）；?clean=1 去掉审阅信息条
 const params = new URLSearchParams(location.search);
 applyTheme(params.get('theme') || 'vibrant');
 document.body.classList.add(THEME.name);
 const story = await getJSON('../docs/03-分镜数据.json');
-const heroA = await getJSON('../build/assets/hero_anchors.json');
-const hero = await loadImage('../build/assets/hero.png');
 await Promise.all(['400 20px NS', '700 20px NS', '900 20px NS', '400 20px JB', '700 20px JB', '400 20px LC'].map(f => document.fonts.load(f, '字A1')));
 
 const FPS = story.format.fps;
 const ctx = document.getElementById('stage').getContext('2d');
 // 投递二维码：render/qr.json 为按原链接重新生成的模块矩阵，缺失时片尾显示占位框
 const qr = await getJSON('./qr.json').catch(() => null);
-const env = { story, hero, heroA, qr, anchors: {}, FPS, clean: !!params.get('clean') };
+// 场站模型与主图：主图为片头第 5 秒构图的两倍分辨率渲染，标注区域由模型投影得到
+const plant = makeFacility();
+const { canvas: hero, anchors: heroA } = makePlantHero();
+const env = { story, hero, heroA, plant, qr, anchors: {}, FPS, clean: !!params.get('clean') };
 const S3 = await makeScenes3D(env);
 const SCENES = { ...makeScenes2D(env, S3), ...S3.scenes };
 

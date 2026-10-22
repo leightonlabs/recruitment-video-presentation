@@ -1,7 +1,6 @@
 // 粗剪渲染器：用无头 Chromium 打开 film.html，按帧调用 seekFrame() 截图，再交给 FFmpeg 编码。
 //
 // 用法（在仓库根目录执行）：
-//   node render/render.mjs hero                          渲染占位主图与坐标 → build/assets/
 //   node render/render.mjs stills <秒,秒,...> <输出目录>    渲染指定时刻的审阅静帧
 //   node render/render.mjs video [并行数]                 渲染全片画面 → build/roughcut/video.mp4
 //   node render/render.mjs sample <起-止,起-止,...> <输出.mp4>  渲染若干时间段并拼接成样片（附临时音轨）
@@ -59,17 +58,6 @@ async function openPage(browser, url) {
   await page.goto(url);
   await page.waitForFunction('window.ready === true', null, { timeout: 120000 });
   return page;
-}
-
-async function hero(base) {
-  const browser = await launch();
-  const page = await openPage(browser, `${base}/render/hero.html`);
-  await mkdir(join(ROOT, 'build/assets'), { recursive: true });
-  await page.screenshot({ path: join(ROOT, 'build/assets/hero.png') });
-  const anchors = await page.evaluate(() => window.HERO_ANCHORS);
-  await writeFile(join(ROOT, 'build/assets/hero_anchors.json'), JSON.stringify(anchors, null, 2));
-  await browser.close();
-  console.log('占位主图 → build/assets/hero.png、hero_anchors.json');
 }
 
 async function stills(base, times, outDir) {
@@ -159,12 +147,11 @@ const [mode, a, b] = process.argv.slice(2);
 const server = await serve();
 const base = `http://127.0.0.1:${server.address().port}`;
 try {
-  if (mode === 'hero') await hero(base);
-  else if (mode === 'stills') await stills(base, a.split(',').map(Number), resolve(b));
+  if (mode === 'stills') await stills(base, a.split(',').map(Number), resolve(b));
   else if (mode === 'video') await video(base, Number(a) || 4);
   else if (mode === 'sample') await sample(base, a, b);
   else if (mode === 'preview') await preview(base, a, resolve(b));
-  else console.log('用法：node render/render.mjs hero | stills <秒,...> <目录> | video [并行数] | sample <起-止,...> <输出.mp4>');
+  else console.log('用法：node render/render.mjs stills <秒,...> <目录> | video [并行数] | sample <起-止,...> <输出.mp4>');
 } finally {
   server.close();
 }
