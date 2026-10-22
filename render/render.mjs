@@ -6,7 +6,7 @@
 //   node render/render.mjs video [并行数]                 渲染全片画面 → build/roughcut/video.mp4
 //   node render/render.mjs sample <起-止,起-止,...> <输出.mp4>  渲染若干时间段并拼接成样片（附临时音轨）
 //
-// 环境变量：THEME=vibrant（默认，动感科技蓝）| classic（原深蓝纯色）；CLEAN=1 去掉审阅信息条；
+// 环境变量：THEME=vibrant（默认，动感科技蓝）| classic（原深蓝纯色）；CLEAN=1 去掉审阅信息条；SUBS=0 样片不烧字幕；
 //           BROWSER=chromium | chrome | msedge 指定浏览器（默认先用 Playwright 自带的 Chromium，没有时依次试本机的 Chrome、Edge）
 import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile, rm } from 'node:fs/promises';
@@ -130,9 +130,10 @@ async function sample(base, spec, outFile) {
   const parts = ranges.map(([a, b], i) => ({ a, b, from: Math.round(a * FPS), to: Math.round(b * FPS), out: join(dir, `seg${i}.mp4`), tag: `片段${i + 1}` }));
   await Promise.all(parts.map(p => renderRange(base, p.from, p.to, p.out, p.tag)));
   // 每段先把时间戳挪回原片位置再烧字幕，然后归零；音轨按同样的时间段截取，段间各做 40–80ms 淡入淡出防爆音
-  const subs = 'build/roughcut/subs.ass';
+  // SUBS=0 时不烧字幕
+  const subs = process.env.SUBS === '0' ? '' : ',ass=build/roughcut/subs.ass:fontsdir=build/fonts';
   const filt = parts.map((p, i) =>
-    `[${i + 1}:v]setpts=PTS+${p.a}/TB,ass=${subs}:fontsdir=build/fonts,setpts=PTS-STARTPTS[v${i}];`
+    `[${i + 1}:v]setpts=PTS+${p.a}/TB${subs},setpts=PTS-STARTPTS[v${i}];`
     + `[0:a]atrim=${p.a}:${p.b},asetpts=PTS-STARTPTS,afade=t=in:d=0.04,afade=t=out:st=${(p.b - p.a - 0.08).toFixed(2)}:d=0.08[a${i}]`).join(';')
     + ';' + parts.map((_, i) => `[v${i}][a${i}]`).join('') + `concat=n=${parts.length}:v=1:a=1[vout][aout]`;
   await run(['-i', join(ROOT, 'build/roughcut/audio.wav'), ...parts.flatMap(p => ['-i', p.out]), '-filter_complex', filt, '-map', '[vout]', '-map', '[aout]',

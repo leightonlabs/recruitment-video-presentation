@@ -51,7 +51,7 @@ export function makeScenes2D(env, S3) {
     V_EYE: ['#050d18', '#123349'], V_OFFICE_PULLBACK: ['#161f2e', '#3d3224'], V_PLANT_DUSK: ['#0b1d33', '#3b2a1f'],
     V_PAIR_DISCUSS: ['#231f1b', '#46382a'], V_MENTOR: ['#26211b', '#4a3b2b'], V_TEAM_TABLE: ['#1f2228', '#44392d'],
     V_3D_OVER_SHOULDER: ['#060e19', '#10263a'], V_CODER_HANDS: ['#060e19', '#13283b'], V_WHITEBOARD: ['#384453', '#7d8ea0'],
-    V_STAIRS: ['#3c3d45', '#8a7a62'], V_PROFILE: ['#050f1b', '#123a46'],
+    V_STAIRS: ['#3c3d45', '#8a7a62'],
   };
   function plate(ctx, P) {
     const id = P.beat.asset, asset = story.assets[id] || {}, pal = PALETTE[id] || [C.navy900, C.navy700];
@@ -739,6 +739,100 @@ export function makeScenes2D(env, S3) {
     });
   }
 
+  // ---------- S23 结尾标语 ----------
+  // 年份数字滚动落定并扩散光环，标语逐字浮现；光点从四周汇聚成关键词下方的光线，最后光线向右延伸，带入片尾同一高度的线
+  const SPARKS = cached('sparks', () => { const R = rng(23); return Array.from({ length: 140 }, () => ({ a: R() * 6.283, r: 650 + R() * 650, u: R(), d: R(), s: 1.4 + R() * 2.2, bend: (R() - 0.5) * 160 })); });
+  const ROLL = cached('roll', () => { const R = rng(2027); return Array.from({ length: 4 }, () => Array.from({ length: 9 }, () => Math.floor(R() * 10))); });
+  function slogan_finale(ctx, P) {
+    const tb = P.tb, X0 = 128, Y1 = 446, Y2 = 572, LY = 610, NF = 250;
+    const full = textOf('S23', 'center-left').replace(/[。！]$/, ''), cut = full.indexOf('，');
+    const head = cut < 0 ? '' : full.slice(0, cut), rest = cut < 0 ? full : full.slice(cut + 1);
+    const [, num = '', suffix = head] = head.match(/^(\d+)(.*)$/) || [];
+    bgNavy(ctx);
+    // 标题背后缓慢呼吸的柔光，与入场时从左侧扩散的闪光
+    const glow = ctx.createRadialGradient(560, 480, 0, 560, 480, 950);
+    glow.addColorStop(0, rgba(C.electric, 0.22 + 0.05 * Math.sin(tb * 2.4))); glow.addColorStop(1, rgba(C.electric, 0));
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+    const fl = 1 - easeOut(seg(tb, 0, 0.45));
+    if (fl > 0) {
+      const g = ctx.createRadialGradient(360, 470, 0, 360, 470, 1150);
+      g.addColorStop(0, `rgba(220,240,255,${(0.55 * fl).toFixed(3)})`); g.addColorStop(1, 'rgba(220,240,255,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    }
+    // 文字与光线整体极慢推近
+    ctx.save(); const z = lerp(1, 1.03, easeInOut(seg(tb, 0, P.bd))); ctx.translate(X0, 520); ctx.scale(z, z); ctx.translate(-X0, -520);
+
+    // 年份：每位数字从一列随机数字滚动落定，依次停下
+    ctx.font = `900 ${NF}px NS`;
+    const widths = [...num].map(d => ctx.measureText(d).width), numW = widths.reduce((a, b) => a + b, 0), LH = NF * 1.1;
+    // 数字先画在离屏画布上，再用上下渐隐的遮罩裁出计数器窗口，滚动中的数字在窗口边缘柔和消失
+    const top = Y1 - NF, wh = Math.ceil(NF * 1.18), win = cached('roll-win', () => { const c = document.createElement('canvas'); c.width = W; c.height = wh; return c; });
+    const g2 = win.getContext('2d'); g2.clearRect(0, 0, win.width, win.height);
+    let x = X0;
+    [...num].forEach((d, i) => {
+      const seq = [...ROLL[i].slice(0, 8), Number(d)], n = seq.length - 1, p = easeOut(seg(tb, 0.02, 0.38 + i * 0.12));
+      seq.forEach((v, j) => {
+        const y = Y1 + (j - n) * LH + (1 - p) * n * LH;
+        if (Math.abs(y - Y1) < LH) text(g2, String(v), x + widths[i] / 2, y - top, { font: `900 ${NF}px NS`, align: 'center' });
+      });
+      x += widths[i];
+    });
+    g2.save(); g2.globalCompositeOperation = 'destination-in';
+    const mask = g2.createLinearGradient(0, 0, 0, wh);
+    mask.addColorStop(0, 'rgba(0,0,0,0)'); mask.addColorStop(0.2, '#000'); mask.addColorStop(0.86, '#000'); mask.addColorStop(1, 'rgba(0,0,0,0)');
+    g2.fillStyle = mask; g2.fillRect(0, 0, win.width, wh); g2.restore();
+    ctx.save(); ctx.globalAlpha = easeOut(seg(tb, 0, 0.2)); ctx.drawImage(win, 0, top); ctx.restore();
+    const ka = easeOut(seg(tb, 0.72, 1.02));
+    text(ctx, suffix, X0 + numW + 20, Y1 + (1 - ka) * 20, { font: '700 112px NS', alpha: ka });
+    // 数字落定时扩散的两圈光环
+    [0.2, 0.8].forEach(t0 => {
+      const ph = seg(tb, t0, t0 + 1.2);
+      if (ph <= 0 || ph >= 1) return;
+      ctx.save(); ctx.strokeStyle = rgba(C.teal, 0.4 * (1 - ph)); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(X0 + numW / 2, Y1 - NF * 0.36, 80 + easeOut(ph) * 600, 0, 7); ctx.stroke(); ctx.restore();
+    });
+
+    // 标语：逐字上浮，由虚到实
+    ctx.font = '700 84px NS';
+    const chars = [...rest], xs = [];
+    let acc = 0;
+    chars.forEach(ch => { xs.push(X0 + acc); acc += ctx.measureText(ch).width; });
+    chars.forEach((ch, j) => {
+      const s = 0.55 + j * 0.03, k = easeOut(seg(tb, s, s + 0.35));
+      if (k <= 0) return;
+      ctx.save(); ctx.filter = k < 1 ? `blur(${((1 - k) * 8).toFixed(1)}px)` : 'none';
+      text(ctx, ch, xs[j], Y2 + (1 - k) * 26, { font: '700 84px NS', alpha: k });
+      ctx.restore();
+    });
+
+    // 关键词“定义……标准”下方的光线：光点从四周汇聚，按从左到右的顺序落到线上
+    const i0 = rest.indexOf('定义'), i1 = rest.lastIndexOf('标准');
+    const kx0 = i0 < 0 ? X0 : xs[i0], kx1 = i1 < 0 ? X0 + acc : (xs[i1 + 2] ?? X0 + acc);
+    const cx = (kx0 + kx1) / 2;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    SPARKS.forEach(s => {
+      const tx = lerp(kx0, kx1, s.u), arrive = 1.15 + s.u * 0.55, start = arrive - 0.75 - s.d * 0.35;
+      const p = seg(tb, start, arrive);
+      if (p <= 0) return;
+      if (p >= 1) { // 落到线上后的一闪
+        const f = 1 - seg(tb, arrive, arrive + 0.18);
+        if (f > 0) { ctx.fillStyle = `rgba(230,245,255,${(0.7 * f).toFixed(3)})`; ctx.beginPath(); ctx.arc(tx, LY, s.s * 1.6, 0, 7); ctx.fill(); }
+        return;
+      }
+      const pos = q => { const e = easeInOut(q), sx = cx + Math.cos(s.a) * s.r, sy = LY + Math.sin(s.a) * s.r * 0.6;
+        return [lerp(sx, tx, e) + Math.sin(e * Math.PI) * s.bend, lerp(sy, LY, e) - Math.sin(e * Math.PI) * s.bend * 0.4]; };
+      const [px, py] = pos(p), [qx, qy] = pos(Math.max(0, p - 0.08)), a = Math.min(1, p * 3);
+      ctx.strokeStyle = `rgba(160,220,255,${(0.35 * a).toFixed(3)})`; ctx.lineWidth = s.s * 0.8;
+      ctx.beginPath(); ctx.moveTo(qx, qy); ctx.lineTo(px, py); ctx.stroke();
+      ctx.fillStyle = `rgba(235,248,255,${(0.9 * a).toFixed(3)})`; ctx.beginPath(); ctx.arc(px, py, s.s, 0, 7); ctx.fill();
+    });
+    ctx.restore();
+    drawLine(ctx, [[kx0, LY], [kx1, LY]], easeInOut(seg(tb, 1.15, 1.7)), { width: 4, glow: 12 });
+    // 结尾：光线向右延伸出画，接片尾同一高度的线
+    drawLine(ctx, [[kx1, LY], [W + 40, LY]], easeInOut(seg(tb, 2.0, 2.55)), { width: 4, glow: 12, flow: false });
+    ctx.restore();
+  }
+
   // ---------- S24 片尾 ----------
   const NET = cached('net', () => { const R = rng(77); return Array.from({ length: 70 }, () => [1100 + R() * 820, 600 + R() * 480, R() * 6.28]); });
   function end_card(ctx, P) {
@@ -761,6 +855,6 @@ export function makeScenes2D(env, S3) {
     plate, still_reveal, mark_target, scene_workbench, brand_card, pilot_cities, pilot_facts, scenario_tiles,
     modality_triptych, boundary_compare, spec_doc, recheck_grid, flow_nodes, validate_terminal,
     whiteboard_flow: (ctx, P) => whiteboard_flow(ctx, P), experiment_log, layer_compare, paper_spec_insert, task_board,
-    deliverables, growth_path, role_grid, recruit_total, job_card_pair, job_card, apply_flow, end_card, missing,
+    deliverables, growth_path, role_grid, recruit_total, job_card_pair, job_card, apply_flow, slogan_finale, end_card, missing,
   };
 }

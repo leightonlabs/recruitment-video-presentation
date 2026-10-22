@@ -55,7 +55,7 @@ const SHOT_ZONES = {
   S19: { header: { x: 128, y: 92 }, card_a: { x: 170, y: 640, w: 720, gap: 14 }, card_b: { x: 1032, y: 640, w: 720, gap: 14 } },
   S20: { panel: { x: 110, y: 540, vAlign: 'middle', w: 560, gap: 18 } },
   S21: { panel: { x: 96, y: 540, vAlign: 'middle', w: 664, gap: 16 } },
-  S23: { 'center-left': { x: 128, y: 540, vAlign: 'middle', w: 1720 } },
+  S23: { _claim: ['center-left'] },
   S22: { 'lower-third': { x: 200, y: 700, gap: 20 }, _claim: ['timeline'] },
   S24: { left: { x: 128, y: 300, gap: 22 }, right: { x: 1300, y: 668, gap: 12 } },
 };

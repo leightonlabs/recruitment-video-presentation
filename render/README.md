@@ -63,6 +63,7 @@ node render/build.mjs --clean 8         # 末尾数字为并行进程数，默�
 ```bash
 node render/render.mjs stills 2.4,30,61 build/review   # 参数为全片秒数
 node render/render.mjs sample "15-24,104-110" build/样片.mp4   # 截取若干时间段拼成样片，带音轨与字幕（需先完整渲染过一次）
+SUBS=0 CLEAN=1 node render/render.mjs sample "138-150" build/片尾.mp4   # 不烧字幕、无审阅信息条
 ```
 
 ## 画面风格

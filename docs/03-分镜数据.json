@@ -283,17 +283,6 @@
       "prompt_zh": "背影中景：一位年轻员工抱着笔记本电脑，走上明亮的现代办公楼中庭里的一段楼梯，脚步轻快自然。午后阳光从高窗斜射进来，墙面有深蓝与青绿色点缀。机位固定，轻微上摇跟随人物。",
       "acceptance": ["步伐自然，腿脚与台阶无穿插、无变形。", "人物不看镜头，墙面与屏幕没有文字或 Logo。"],
       "replace_with_R": "员工在办公楼内行走的实拍（需本人同意）。"
-    },
-    "V_PROFILE": {
-      "kind": "video",
-      "route": "A",
-      "required": true,
-      "gen_seconds": 5,
-      "camera": "锁定机位，极慢推近",
-      "prompt_en": "Close-up side profile of a young East Asian graduate sitting in front of a monitor. Cool teal screen light on the face, warm rim light from behind. A calm, focused expression turns into a slight confident smile, then the person leans a little toward the screen. Shallow depth of field, dark navy background. Static camera with a very slow push-in.",
-      "prompt_zh": "侧脸近景：一位中国青年毕业生坐在显示器前，脸上映着冷青色屏幕光，身后有暖色轮廓光。专注平静的神情转为一丝自信的微笑，随后身体略微前倾靠近屏幕。浅景深，深海军蓝背景。机位固定，极慢推近。",
-      "acceptance": ["微笑自然克制，面部无变形。", "人物不看镜头。"],
-      "replace_with_R": "新员工侧脸实拍（需本人同意）。"
     }
   },
   "music": [
@@ -877,7 +866,7 @@
       "purpose": "标准被下一位同事复用，回到人。",
       "beats": [
         { "t": [0, 2.4], "src": "G", "scene": "scene_workbench", "asset": "IMG_HERO", "do": "带“新同事”标签的光标打开“场景应用规范 1.3 版 › 案例 017”；主图与适配后模型的框线出现，构图与 S01 定格一致。" },
-        { "t": [2.4, 5.0], "src": "A", "asset": "V_PROFILE", "do": "新同事侧脸，神情转为自信。" }
+        { "t": [2.4, 5.0], "src": "G", "scene": "slogan_finale", "do": "代码动画：“2027”逐位滚动落定并扩散两圈光环，标语逐字由虚到实浮现；光点从四周汇聚成关键词下方的光线，线上光点流动，最后光线向右延伸出画，接 S24 同一高度的线。" }
       ],
       "text": [
         { "t": [0.3, 2.3], "style": "tag", "zone": "anchor:cursor", "content": "新同事" },
