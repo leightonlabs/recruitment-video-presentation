@@ -65,6 +65,7 @@ node render/build.mjs --clean --no-music   # 不放配乐，音轨只保留音�
 node render/render.mjs stills 2.4,30,61 build/review   # 参数为全片秒数
 node render/render.mjs sample "15-24,104-110" build/样片.mp4   # 截取若干时间段拼成样片，带音轨与字幕（需先完整渲染过一次）
 SUBS=0 CLEAN=1 node render/render.mjs sample "138-150" build/片尾.mp4   # 不烧字幕、无审阅信息条
+node render/render.mjs preview all build/preview   # 改版预览画面（数字孪生能源场站，preview.html），待确认后接入正片
 ```
 
 ## 画面风格
@@ -107,6 +108,8 @@ THEME=vibrant CLEAN=1 node render/render.mjs sample "15-24,143-150" build/样片
 | `scenes3d.js` | 三维场景：主图粒子化、点云、点云场景生长、三视图 |
 | `draw.js` | 两套主题色、动态背景、缓动、描线、面板、文字等通用绘图工具 |
 | `geometry.js` | 占位主图与点云共用的几何参数 |
+| `facility.js` | 数字孪生能源场站（改版方案）：程序生成的装置区光点模型、扫描显现、蒸汽、设备点亮与屏幕投影 |
+| `preview.html`、`preview.js` | 改版预览：用场站模型渲染新方案的关键画面 |
 | `hero.html` | 占位主图渲染页 |
 | `render.mjs` | 无头浏览器逐帧截图与并行编码；也可单独渲染静帧与样片 |
 | `audio.py`、`subs.py` | 临时音轨合成与字幕转换 |

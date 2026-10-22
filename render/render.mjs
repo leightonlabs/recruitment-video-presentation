@@ -5,6 +5,7 @@
 //   node render/render.mjs stills <秒,秒,...> <输出目录>    渲染指定时刻的审阅静帧
 //   node render/render.mjs video [并行数]                 渲染全片画面 → build/roughcut/video.mp4
 //   node render/render.mjs sample <起-止,起-止,...> <输出.mp4>  渲染若干时间段并拼接成样片（附临时音轨）
+//   node render/render.mjs preview <名称,...|all> <输出目录>  渲染改版预览画面（preview.html）
 //
 // 环境变量：THEME=vibrant（默认，动感科技蓝）| classic（原深蓝纯色）；CLEAN=1 去掉审阅信息条；SUBS=0 样片不烧字幕；
 //           BROWSER=chromium | chrome | msedge 指定浏览器（默认先用 Playwright 自带的 Chromium，没有时依次试本机的 Chrome、Edge）
@@ -84,6 +85,19 @@ async function stills(base, times, outDir) {
   console.log(`${times.length} 张静帧 → ${outDir}`);
 }
 
+async function preview(base, names, outDir) {
+  const browser = await launch();
+  const page = await openPage(browser, `${base}/render/preview.html`);
+  await mkdir(outDir, { recursive: true });
+  const list = names === 'all' ? await page.evaluate(() => window.PREVIEW_FRAMES) : names.split(',');
+  for (const n of list) {
+    await page.evaluate(x => window.renderPreview(x), n);
+    await page.screenshot({ path: join(outDir, `${n}.png`) });
+  }
+  await browser.close();
+  console.log(`${list.length} 张预览 → ${outDir}`);
+}
+
 async function renderRange(base, from, to, out, tag) {
   const browser = await launch();
   const page = await openPage(browser, `${base}/render/film.html${QUERY}`);
@@ -149,6 +163,7 @@ try {
   else if (mode === 'stills') await stills(base, a.split(',').map(Number), resolve(b));
   else if (mode === 'video') await video(base, Number(a) || 4);
   else if (mode === 'sample') await sample(base, a, b);
+  else if (mode === 'preview') await preview(base, a, resolve(b));
   else console.log('用法：node render/render.mjs hero | stills <秒,...> <目录> | video [并行数] | sample <起-止,...> <输出.mp4>');
 } finally {
   server.close();
