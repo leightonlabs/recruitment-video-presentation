@@ -76,7 +76,7 @@ function s01(t) {
   draw3D();
   if (t >= 3.0) perception(t - 3.0);
   if (t > 0.8) { ctx.save(); ctx.globalAlpha = easeOut(seg(t, 0.8, 1.3)); title('AI，怎样看懂真实世界？', 128, 900); ctx.restore(); }
-  notice('本片部分画面由代码生成，仅作工作场景示意');
+  notice('本片部分画面由AI生成，仅作工作场景示意');
   finish();
 }
 function perception(tb) {
