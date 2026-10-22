@@ -145,7 +145,7 @@ async function sample(base, spec, outFile) {
   console.log(`样片 → ${outFile}`);
 }
 
-const [mode, a, b] = process.argv.slice(2);
+const [mode, a, b, c] = process.argv.slice(2);
 const server = await serve();
 const base = `http://127.0.0.1:${server.address().port}`;
 try {
@@ -153,7 +153,8 @@ try {
   else if (mode === 'video') await video(base, Number(a) || 4);
   else if (mode === 'sample') await sample(base, a, b);
   else if (mode === 'preview') await preview(base, a, resolve(b));
-  else console.log('用法：node render/render.mjs stills <秒,...> <目录> | video [并行数] | sample <起-止,...> <输出.mp4>');
+  else if (mode === 'range') await renderRange(base, Number(a), Number(b), resolve(c), `帧${a}-${b}`); // 补渲某段帧（中断后续跑用）
+  else console.log('用法：node render/render.mjs stills <秒,...> <目录> | video [并行数] | sample <起-止,...> <输出.mp4> | range <起始帧> <结束帧> <输出.mp4>');
 } finally {
   server.close();
 }
