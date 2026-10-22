@@ -54,6 +54,8 @@ const listLine = p => `file '${p.replace(/\\/g, '/')}'`;
 
 async function openPage(browser, url) {
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+  // 首帧要等主图（两倍分辨率）与样本图的一次性渲染完成，多进程并行时可能超过默认的 30 秒
+  page.setDefaultTimeout(600000);
   page.on('pageerror', e => console.error('页面错误：', e.message));
   await page.goto(url);
   await page.waitForFunction('window.ready === true', null, { timeout: 120000 });
